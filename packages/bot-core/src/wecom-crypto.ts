@@ -23,7 +23,12 @@ export class WeComCrypto {
     return createHash("sha1").update(parts.join("")).digest("hex");
   }
 
-  verifySignature(timestamp: string, nonce: string, encryptMsg: string, signature: string): boolean {
+  verifySignature(
+    timestamp: string,
+    nonce: string,
+    encryptMsg: string,
+    signature: string,
+  ): boolean {
     return this.sign(timestamp, nonce, encryptMsg) === signature;
   }
 
@@ -61,7 +66,8 @@ export class WeComCrypto {
 
 /** Minimal CDATA field extractor - sufficient for WeCom's flat message XML. */
 export function xmlField(xml: string, field: string): string | undefined {
-  const m = xml.match(new RegExp(`<${field}><!\\[CDATA\\[([\\s\\S]*?)\\]\\]></${field}>`))
-    ?? xml.match(new RegExp(`<${field}>([^<]*)</${field}>`));
+  const m =
+    xml.match(new RegExp(`<${field}><!\\[CDATA\\[([\\s\\S]*?)\\]\\]></${field}>`)) ??
+    xml.match(new RegExp(`<${field}>([^<]*)</${field}>`));
   return m?.[1];
 }

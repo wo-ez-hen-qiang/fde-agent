@@ -35,8 +35,7 @@ export class FeishuAdapter implements BotAdapter {
 
     // 2) Event callback v2
     const header = body.header as
-      | { event_id?: string; event_type?: string; token?: string }
-      | undefined;
+      { event_id?: string; event_type?: string; token?: string } | undefined;
     if (!header?.event_type) return { kind: "ignored", reason: "not an event callback" };
     if (this.opts.verificationToken && header.token !== this.opts.verificationToken) {
       return { kind: "ignored", reason: "event token mismatch" };
@@ -59,7 +58,8 @@ export class FeishuAdapter implements BotAdapter {
     const msg = event?.message;
     if (!msg?.message_id || !msg.chat_id) return { kind: "ignored", reason: "no message" };
     if (event.sender?.sender_type === "bot") return { kind: "ignored", reason: "from bot" };
-    if (msg.message_type !== "text") return { kind: "ignored", reason: `unsupported message_type ${msg.message_type}` };
+    if (msg.message_type !== "text")
+      return { kind: "ignored", reason: `unsupported message_type ${msg.message_type}` };
 
     let text = "";
     try {
@@ -116,7 +116,12 @@ export class FeishuAdapter implements BotAdapter {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ app_id: this.opts.appId, app_secret: this.opts.appSecret }),
     });
-    const json = (await res.json()) as { code: number; tenant_access_token?: string; expire?: number; msg?: string };
+    const json = (await res.json()) as {
+      code: number;
+      tenant_access_token?: string;
+      expire?: number;
+      msg?: string;
+    };
     if (json.code !== 0 || !json.tenant_access_token) {
       throw new Error(`[bot-core] feishu token failed: ${json.msg ?? res.status}`);
     }

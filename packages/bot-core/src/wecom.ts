@@ -103,11 +103,19 @@ export class WeComAppAdapter implements BotAdapter {
     const res = await fetch(
       `${base}/cgi-bin/gettoken?corpid=${this.opts.corpId}&corpsecret=${this.opts.secret}`,
     );
-    const json = (await res.json()) as { errcode: number; access_token?: string; expires_in?: number; errmsg?: string };
+    const json = (await res.json()) as {
+      errcode: number;
+      access_token?: string;
+      expires_in?: number;
+      errmsg?: string;
+    };
     if (json.errcode !== 0 || !json.access_token) {
       throw new Error(`[bot-core] wecom token failed: ${json.errmsg ?? res.status}`);
     }
-    this.tokenCache = { token: json.access_token, expiresAt: Date.now() + (json.expires_in ?? 7200) * 1000 };
+    this.tokenCache = {
+      token: json.access_token,
+      expiresAt: Date.now() + (json.expires_in ?? 7200) * 1000,
+    };
     return json.access_token;
   }
 }
@@ -133,7 +141,11 @@ export class WeComWebhookPusher {
   private async post(payload: unknown): Promise<void> {
     const res = await fetch(
       `https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${this.webhookKey}`,
-      { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) },
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      },
     );
     const json = (await res.json()) as { errcode: number; errmsg: string };
     if (json.errcode !== 0) {

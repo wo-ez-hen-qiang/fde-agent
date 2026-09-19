@@ -49,7 +49,10 @@ export class BotDispatcher {
         const { replyText } = await this.handler!(event);
         await adapter.sendMessage({ chatId: event.chatId, text: replyText });
       } catch (err) {
-        console.error(`[bot-core] handle ${platform} event failed:`, err instanceof Error ? err.message : err);
+        console.error(
+          `[bot-core] handle ${platform} event failed:`,
+          err instanceof Error ? err.message : err,
+        );
       }
     })();
 

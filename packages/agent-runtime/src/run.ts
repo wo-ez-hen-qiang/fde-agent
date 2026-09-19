@@ -95,7 +95,10 @@ export async function runDiagnosis(
   }
   const references: DiagnosisReference[] = [];
   for (const item of result.newItems) {
-    if (item.type === "tool_call_output_item" && Array.isArray((item as { output?: unknown }).output)) {
+    if (
+      item.type === "tool_call_output_item" &&
+      Array.isArray((item as { output?: unknown }).output)
+    ) {
       for (const hit of (item as { output: Array<Record<string, unknown>> }).output) {
         if (typeof hit.chunkId === "string") {
           references.push({

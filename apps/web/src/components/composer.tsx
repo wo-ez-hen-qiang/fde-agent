@@ -73,7 +73,9 @@ export function Composer({
               onChange={(e) => onModelChange(e.target.value)}
               disabled={enabledModels.length === 0}
               className="rounded border border-border bg-transparent px-1 py-0.5 disabled:opacity-50"
-              title={enabledModels.length === 0 ? "没有可用模型：请在 .env 配置 API Key" : undefined}
+              title={
+                enabledModels.length === 0 ? "没有可用模型：请在 .env 配置 API Key" : undefined
+              }
             >
               {enabledModels.length === 0 && <option value="">未配置（见 .env.example）</option>}
               {enabledModels.map((m) => (
@@ -101,10 +103,7 @@ export function Composer({
             className="flex-1 resize-none bg-transparent px-2 py-1.5 text-sm outline-none"
           />
           {streaming ? (
-            <button
-              onClick={onStop}
-              className="rounded-xl border border-border px-4 py-2 text-sm"
-            >
+            <button onClick={onStop} className="rounded-xl border border-border px-4 py-2 text-sm">
               停止
             </button>
           ) : (

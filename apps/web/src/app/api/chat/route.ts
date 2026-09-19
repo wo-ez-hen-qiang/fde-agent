@@ -20,11 +20,13 @@ export async function POST(req: Request) {
   const store = chatStore();
   const sessionId =
     body.sessionId ??
-    (await store.createSession({
-      channel: body.channel ?? "web",
-      knowledgeBaseId: body.knowledgeBaseId,
-      model: body.model,
-    })).id;
+    (
+      await store.createSession({
+        channel: body.channel ?? "web",
+        knowledgeBaseId: body.knowledgeBaseId,
+        model: body.model,
+      })
+    ).id;
 
   await store.appendMessage({ sessionId, role: "user", content: body.message });
   await store.maybeAutoTitle(sessionId, body.message);

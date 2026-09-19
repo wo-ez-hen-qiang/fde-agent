@@ -1,8 +1,4 @@
-import type {
-  ModelDescriptor,
-  ProviderConfig,
-  ProviderId,
-} from "@fde/shared";
+import type { ModelDescriptor, ProviderConfig, ProviderId } from "@fde/shared";
 
 /**
  * Static catalog of known models. An alias is only *enabled* when the
@@ -16,17 +12,57 @@ const CATALOG: Array<{
   capabilities?: ModelDescriptor["capabilities"];
 }> = [
   // GLM (Zhipu)
-  { provider: "glm", model: "glm-4.6", label: "GLM-4.6", capabilities: { streaming: true, tools: true, reasoning: true } },
-  { provider: "glm", model: "glm-4.5-flash", label: "GLM-4.5 Flash", capabilities: { streaming: true, tools: true } },
+  {
+    provider: "glm",
+    model: "glm-4.6",
+    label: "GLM-4.6",
+    capabilities: { streaming: true, tools: true, reasoning: true },
+  },
+  {
+    provider: "glm",
+    model: "glm-4.5-flash",
+    label: "GLM-4.5 Flash",
+    capabilities: { streaming: true, tools: true },
+  },
   // DeepSeek
-  { provider: "deepseek", model: "deepseek-chat", label: "DeepSeek V3", capabilities: { streaming: true, tools: true } },
-  { provider: "deepseek", model: "deepseek-reasoner", label: "DeepSeek R1", capabilities: { streaming: true, tools: false, reasoning: true } },
+  {
+    provider: "deepseek",
+    model: "deepseek-chat",
+    label: "DeepSeek V3",
+    capabilities: { streaming: true, tools: true },
+  },
+  {
+    provider: "deepseek",
+    model: "deepseek-reasoner",
+    label: "DeepSeek R1",
+    capabilities: { streaming: true, tools: false, reasoning: true },
+  },
   // OpenAI
-  { provider: "openai", model: "gpt-4o", label: "GPT-4o", capabilities: { streaming: true, tools: true } },
-  { provider: "openai", model: "gpt-4o-mini", label: "GPT-4o mini", capabilities: { streaming: true, tools: true } },
+  {
+    provider: "openai",
+    model: "gpt-4o",
+    label: "GPT-4o",
+    capabilities: { streaming: true, tools: true },
+  },
+  {
+    provider: "openai",
+    model: "gpt-4o-mini",
+    label: "GPT-4o mini",
+    capabilities: { streaming: true, tools: true },
+  },
   // Anthropic
-  { provider: "claude", model: "claude-sonnet-4-5", label: "Claude Sonnet 4.5", capabilities: { streaming: true, tools: true, reasoning: true } },
-  { provider: "claude", model: "claude-haiku-4-5", label: "Claude Haiku 4.5", capabilities: { streaming: true, tools: true } },
+  {
+    provider: "claude",
+    model: "claude-sonnet-4-5",
+    label: "Claude Sonnet 4.5",
+    capabilities: { streaming: true, tools: true, reasoning: true },
+  },
+  {
+    provider: "claude",
+    model: "claude-haiku-4-5",
+    label: "Claude Haiku 4.5",
+    capabilities: { streaming: true, tools: true },
+  },
 ];
 
 export interface EnvLike {
@@ -37,10 +73,26 @@ const PROVIDER_ENV: Record<
   ProviderId,
   { apiKey: string; baseUrl: string; defaultBaseUrl?: string }
 > = {
-  glm: { apiKey: "GLM_API_KEY", baseUrl: "GLM_BASE_URL", defaultBaseUrl: "https://open.bigmodel.cn/api/paas/v4" },
-  deepseek: { apiKey: "DEEPSEEK_API_KEY", baseUrl: "DEEPSEEK_BASE_URL", defaultBaseUrl: "https://api.deepseek.com" },
-  openai: { apiKey: "OPENAI_API_KEY", baseUrl: "OPENAI_BASE_URL", defaultBaseUrl: "https://api.openai.com/v1" },
-  claude: { apiKey: "ANTHROPIC_API_KEY", baseUrl: "ANTHROPIC_BASE_URL", defaultBaseUrl: "https://api.anthropic.com" },
+  glm: {
+    apiKey: "GLM_API_KEY",
+    baseUrl: "GLM_BASE_URL",
+    defaultBaseUrl: "https://open.bigmodel.cn/api/paas/v4",
+  },
+  deepseek: {
+    apiKey: "DEEPSEEK_API_KEY",
+    baseUrl: "DEEPSEEK_BASE_URL",
+    defaultBaseUrl: "https://api.deepseek.com",
+  },
+  openai: {
+    apiKey: "OPENAI_API_KEY",
+    baseUrl: "OPENAI_BASE_URL",
+    defaultBaseUrl: "https://api.openai.com/v1",
+  },
+  claude: {
+    apiKey: "ANTHROPIC_API_KEY",
+    baseUrl: "ANTHROPIC_BASE_URL",
+    defaultBaseUrl: "https://api.anthropic.com",
+  },
   // "cursor" traffic is carried by the cursor-cli backend, not an HTTP API.
   cursor: { apiKey: "CURSOR_API_KEY", baseUrl: "CURSOR_BASE_URL" },
 };
@@ -58,7 +110,10 @@ export function parseAlias(alias: string): { provider: ProviderId; model: string
 }
 
 /** Resolve provider credentials/config from environment. */
-export function resolveProviderConfig(provider: ProviderId, env: EnvLike = process.env): ProviderConfig {
+export function resolveProviderConfig(
+  provider: ProviderId,
+  env: EnvLike = process.env,
+): ProviderConfig {
   const meta = PROVIDER_ENV[provider];
   return {
     provider,

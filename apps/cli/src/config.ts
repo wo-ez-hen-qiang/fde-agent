@@ -30,7 +30,10 @@ export function configPath(): string {
 export function loadConfig(): FdeCliConfig {
   try {
     if (existsSync(configPath())) {
-      return { ...DEFAULT_CONFIG, ...(JSON.parse(readFileSync(configPath(), "utf8")) as Partial<FdeCliConfig>) };
+      return {
+        ...DEFAULT_CONFIG,
+        ...(JSON.parse(readFileSync(configPath(), "utf8")) as Partial<FdeCliConfig>),
+      };
     }
   } catch {
     console.error("[cli] 配置文件损坏，使用默认配置");

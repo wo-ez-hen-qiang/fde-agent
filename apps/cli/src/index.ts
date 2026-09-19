@@ -19,41 +19,52 @@ program
   .option("-i, --interactive", "交互式多轮对话")
   .option("-m, --model <alias>", "模型别名（api 后端）")
   .option("-b, --backend <id>", "后端：api | claude-cli | codex-cli | cursor-cli")
-  .action(async (message: string | undefined, opts: { interactive?: boolean; model?: string; backend?: string }) => {
-    const config = loadConfig();
-    const backend = resolveBackend(opts.backend ?? config.backend);
-    if (!backend) {
-      console.error(`[cli] 未知后端：${opts.backend ?? config.backend}，用 fde backend list 查看`);
-      process.exit(1);
-    }
-    if (!(await backend.isAvailable())) {
-      console.error(`[cli] 后端 ${backend.id} 不可用（CLI 未安装或 API Key 未配置）`);
-      process.exit(1);
-    }
-
-    const ask = async (text: string) => {
-      for await (const chunk of backend.chat(
-        { message: text, model: opts.model ?? config.model, knowledgeBaseId: config.knowledgeBaseId },
-        config.cliAuth,
-      )) {
-        process.stdout.write(chunk);
+  .action(
+    async (
+      message: string | undefined,
+      opts: { interactive?: boolean; model?: string; backend?: string },
+    ) => {
+      const config = loadConfig();
+      const backend = resolveBackend(opts.backend ?? config.backend);
+      if (!backend) {
+        console.error(
+          `[cli] 未知后端：${opts.backend ?? config.backend}，用 fde backend list 查看`,
+        );
+        process.exit(1);
       }
-      process.stdout.write("\n");
-    };
+      if (!(await backend.isAvailable())) {
+        console.error(`[cli] 后端 ${backend.id} 不可用（CLI 未安装或 API Key 未配置）`);
+        process.exit(1);
+      }
 
-    if (opts.interactive || !message) {
-      console.log(`fde chat（后端：${backend.label}，Ctrl+C 退出）`);
-      const rl = createInterface({ input: process.stdin, output: process.stdout, prompt: "> " });
-      rl.prompt();
-      for await (const line of rl) {
-        const text = line.trim();
-        if (text) await ask(text);
+      const ask = async (text: string) => {
+        for await (const chunk of backend.chat(
+          {
+            message: text,
+            model: opts.model ?? config.model,
+            knowledgeBaseId: config.knowledgeBaseId,
+          },
+          config.cliAuth,
+        )) {
+          process.stdout.write(chunk);
+        }
+        process.stdout.write("\n");
+      };
+
+      if (opts.interactive || !message) {
+        console.log(`fde chat（后端：${backend.label}，Ctrl+C 退出）`);
+        const rl = createInterface({ input: process.stdin, output: process.stdout, prompt: "> " });
         rl.prompt();
+        for await (const line of rl) {
+          const text = line.trim();
+          if (text) await ask(text);
+          rl.prompt();
+        }
+        return;
       }
-      return;
-    }
-    await ask(message);
-  });
+      await ask(message);
+    },
+  );
 
 program
   .command("diagnose")
@@ -69,8 +80,15 @@ program
       process.exit(1);
     }
     const { buildDiagnosisAgent, runDiagnosis } = await import("@fde/agent-runtime");
-    const agent = await buildDiagnosisAgent({ modelAlias: opts.model ?? config.model, knowledgeBaseId: kb });
-    const { output, references } = await runDiagnosis({ agent, input: ticket, knowledgeBaseId: kb });
+    const agent = await buildDiagnosisAgent({
+      modelAlias: opts.model ?? config.model,
+      knowledgeBaseId: kb,
+    });
+    const { output, references } = await runDiagnosis({
+      agent,
+      input: ticket,
+      knowledgeBaseId: kb,
+    });
     console.log(`\n诊断结论：${output.summary}\n`);
     console.log(`问题定位：${output.location}\n`);
     console.log(`根因分析：${output.rootCause}\n`);
@@ -80,7 +98,9 @@ program
     if (references.length > 0) {
       console.log(`\n引用（${references.length}）：`);
       for (const ref of references) {
-        console.log(`  - [${ref.documentTitle}] ${ref.excerpt.slice(0, 80)}… (${ref.score.toFixed(2)})`);
+        console.log(
+          `  - [${ref.documentTitle}] ${ref.excerpt.slice(0, 80)}… (${ref.score.toFixed(2)})`,
+        );
       }
     }
   });
@@ -130,7 +150,9 @@ program
   .description("列出模型流量（别名 / 是否已配置）")
   .action(() => {
     for (const m of listModels()) {
-      console.log(`${m.enabled ? "●" : "○"} ${m.alias.padEnd(28)} ${m.label}${m.enabled ? "" : "（缺 API Key）"}`);
+      console.log(
+        `${m.enabled ? "●" : "○"} ${m.alias.padEnd(28)} ${m.label}${m.enabled ? "" : "（缺 API Key）"}`,
+      );
     }
   });
 

@@ -13,6 +13,9 @@
     "dev:cli": "pnpm --filter @fde/cli run dev",
     "build": "pnpm -r run build",
     "lint": "eslint .",
+    "lint:deps": "depcruise apps packages --config dependency-cruiser.cjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "typecheck": "pnpm -r --if-present run typecheck",
     "test": "pnpm -r --if-present run test",
     "clean": "pnpm -r --if-present run clean",
@@ -21,12 +24,25 @@
     "prepare": "git config core.hooksPath .githooks"
   },
   "devDependencies": {
-    "typescript": "^5.6.0",
-    "prettier": "^3.3.0",
+    "dependency-cruiser": "^16.10.4",
     "eslint": "^9.13.0",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.3.0",
+    "typescript": "^5.6.0",
     "typescript-eslint": "^8.11.0"
   },
+  "lint-staged": {
+    "*.{ts,tsx,js,mjs,cjs}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "*.{json,yml,yaml,css}": [
+      "prettier --write"
+    ]
+  },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }

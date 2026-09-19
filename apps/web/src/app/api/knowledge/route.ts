@@ -8,7 +8,10 @@ export async function GET() {
     const kbs = await knowledgeStore().listKnowledgeBases();
     return Response.json({ knowledgeBases: kbs });
   } catch (err) {
-    return Response.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
+    return Response.json(
+      { error: err instanceof Error ? err.message : String(err) },
+      { status: 500 },
+    );
   }
 }
 
@@ -20,6 +23,9 @@ export async function POST(req: Request) {
     const kb = await knowledgeStore().createKnowledgeBase(body.name.trim(), body.description);
     return Response.json({ knowledgeBase: kb }, { status: 201 });
   } catch (err) {
-    return Response.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
+    return Response.json(
+      { error: err instanceof Error ? err.message : String(err) },
+      { status: 500 },
+    );
   }
 }

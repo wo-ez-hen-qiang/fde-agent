@@ -17,6 +17,9 @@ export async function POST(req: Request, ctx: Ctx) {
     const doc = await knowledgeStore().addDocument(id, body.title.trim(), body.text);
     return Response.json({ document: doc }, { status: 201 });
   } catch (err) {
-    return Response.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
+    return Response.json(
+      { error: err instanceof Error ? err.message : String(err) },
+      { status: 500 },
+    );
   }
 }

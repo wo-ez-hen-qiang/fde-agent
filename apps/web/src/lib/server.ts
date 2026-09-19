@@ -66,7 +66,11 @@ export function botDispatcher(): BotDispatcher {
       if (ev.type === "error") replyText = `出错了：${ev.message}`;
     }
     await chatStore().appendMessage({ sessionId: session.id, role: "user", content: event.text });
-    await chatStore().appendMessage({ sessionId: session.id, role: "assistant", content: replyText });
+    await chatStore().appendMessage({
+      sessionId: session.id,
+      role: "assistant",
+      content: replyText,
+    });
     return { replyText: replyText || "（没有生成回复）", sessionId: session.id };
   });
 

@@ -57,7 +57,7 @@ Task Progress:
 6. **日志**：服务端用 `console.error/warn` 带模块前缀（如 `[bot-core]`），禁止打印密钥与完整用户输入。
 7. **样式**：禁止内联样式（`style={{}}`）。一律使用 Tailwind 工具类；主题相关（颜色/背景/边框）使用 `globals.css` 中 `@theme inline` 注册的语义 token（如 `bg-primary`、`text-secondary`、`border-border`），新增 token 先在 globals.css 定义再使用。
 8. **提交**：Conventional Commits，如 `feat(bot-core): add feishu adapter`。**里程碑（最终）提交必须同步三处版本信息**：① 根目录 `VERSION` 文件；② 根 `package.json` 的 `version`；③ `CHANGELOG.md` 顶部新增版本小节（遵循 Keep a Changelog：`Added/Changed/Fixed/Removed` 分类，写清发布说明与变更点）。版本号变更写进 commit message。**发版用 `scripts/release.sh`**（自动校验工作区干净 → 打 tag → 推送 → 用 CHANGELOG 小节创建 GitHub Release），禁止手工零散打 tag。
-9. **git 门禁**：每次提交自动执行 `.githooks/pre-commit`（VERSION 同步检查 → `pnpm typecheck` → `pnpm lint`），任一失败则拒绝提交。禁止用 `--no-verify` 绕过；紧急情况必须使用时，在 commit message 中注明原因并尽快补绿。新机器克隆后 `pnpm install` 会自动挂上门禁（`prepare` 脚本设置 `core.hooksPath`）。
+9. **git 门禁**：每次提交自动执行 `.githooks/pre-commit`（VERSION 同步 → lint-staged：prettier+eslint 只扫暂存文件 → `pnpm lint:deps` 禁循环依赖并强制 apps→packages → `pnpm typecheck`），任一失败则拒绝提交。禁止用 `--no-verify` 绕过；紧急情况必须使用时，在 commit message 中注明原因并尽快补绿。新机器克隆后 `pnpm install` 会自动挂上门禁（`prepare` 脚本设置 `core.hooksPath`）。类型导入必须用 `import type`（`@typescript-eslint/consistent-type-imports`）。
 10. **模型署名**：commit message 必须带 trailer `AI-Model: <模型名>`（如 `AI-Model: kimi-k3` / `AI-Model: claude-sonnet` / `AI-Model: gpt-5`；人工提交写 `AI-Model: human`），由 `.githooks/commit-msg` 机械强制。设计文档同理，顶部作者行写明模型名。
 
 ## 技术栈速查

@@ -30,4 +30,6 @@ export interface BotAdapter {
 }
 
 /** What the bot layer does with a normalized event (wired to the agent runtime). */
-export type BotEventHandler = (event: UnifiedBotEvent) => Promise<{ replyText: string; sessionId?: string }>;
+export type BotEventHandler = (
+  event: UnifiedBotEvent,
+) => Promise<{ replyText: string; sessionId?: string }>;

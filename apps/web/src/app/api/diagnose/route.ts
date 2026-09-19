@@ -64,6 +64,9 @@ export async function POST(req: Request) {
 
     return Response.json({ diagnosis: result });
   } catch (err) {
-    return Response.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
+    return Response.json(
+      { error: err instanceof Error ? err.message : String(err) },
+      { status: 500 },
+    );
   }
 }

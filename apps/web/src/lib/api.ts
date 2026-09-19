@@ -1,6 +1,12 @@
 "use client";
 
-import type { ChatMessage, ChatSession, ChatStreamEvent, KnowledgeBase, ModelDescriptor } from "@fde/shared";
+import type {
+  ChatMessage,
+  ChatSession,
+  ChatStreamEvent,
+  KnowledgeBase,
+  ModelDescriptor,
+} from "@fde/shared";
 
 /** Client-side API helpers. */
 
@@ -10,7 +16,9 @@ export async function fetchSessions(): Promise<ChatSession[]> {
   return json.sessions ?? [];
 }
 
-export async function fetchSessionDetail(id: string): Promise<{ session: ChatSession; messages: ChatMessage[] }> {
+export async function fetchSessionDetail(
+  id: string,
+): Promise<{ session: ChatSession; messages: ChatMessage[] }> {
   const res = await fetch(`/api/sessions/${id}`);
   if (!res.ok) throw new Error("加载会话失败");
   return res.json();
