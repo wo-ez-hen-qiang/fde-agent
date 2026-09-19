@@ -67,7 +67,33 @@ echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab   # 开机自动挂
 
 资源不足期间的开发方式：`pnpm dev:web`（按需编译，峰值内存低，首次访问某路由时编译稍慢）。
 
-## 6. 相关 runbook
+## 6. GitHub CLI（gh）
+
+仓库的 GitHub 操作用 gh 完成（建库、PR、Release、CI 状态）。
+
+```bash
+# 安装（用户目录，免 sudo）
+TAG=$(curl -s https://api.github.com/repos/cli/cli/releases/latest | python3 -c "import json,sys; print(json.load(sys.stdin)['tag_name'])")
+curl -sLO "https://github.com/cli/cli/releases/download/${TAG}/gh_${TAG#v}_linux_amd64.tar.gz"
+tar -xzf "gh_${TAG#v}_linux_amd64.tar.gz" && mkdir -p ~/.local/bin
+cp "gh_${TAG#v}_linux_amd64/bin/gh" ~/.local/bin/
+
+# 登录（设备码授权，按提示在浏览器完成）
+gh auth login --git-protocol ssh --web --hostname github.com
+```
+
+常用命令：
+
+| 命令 | 作用 |
+|---|---|
+| `gh repo create fde-agent --public --source=. --remote=origin --push` | 建库并首次推送 |
+| `gh repo view --web` | 浏览器打开仓库 |
+| `gh pr create / gh pr checks` | PR 与 CI 状态 |
+| `gh release list` | 发布记录 |
+
+CI：`.github/workflows/ci.yml` 在每次 push/PR 时跑 版本三方同步 + typecheck + lint + web 构建（GitHub runner 内存充足，本机跑不了的 `next build` 在 CI 里验证）。
+
+## 7. 相关 runbook
 
 - SSH 免密/保活/本地域名：`ssh-setup-and-keepalive.md`
 - Windows 文件共享：`samba-windows-share.md`

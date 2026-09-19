@@ -1,0 +1,41 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install
+
+      - name: Version sync (VERSION / package.json / CHANGELOG)
+        run: |
+          PKG_VER=$(node -p "require('./package.json').version")
+          FILE_VER=$(tr -d '[:space:]' < VERSION)
+          CHANGELOG_VER=$(grep -oP '(?<=## \[)[0-9]+\.[0-9]+\.[0-9]+(?=\])' CHANGELOG.md | head -1)
+          [ "$PKG_VER" = "$FILE_VER" ] && [ "$FILE_VER" = "$CHANGELOG_VER" ] || {
+            echo "版本三方不一致: package.json=$PKG_VER VERSION=$FILE_VER CHANGELOG=$CHANGELOG_VER"; exit 1;
+          }
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      # GitHub runner 有 7GB 内存，本机 1.6GB 虚拟机跑不了的 next build 在这里跑
+      - name: Build web
+        run: pnpm --filter @fde/web run build
