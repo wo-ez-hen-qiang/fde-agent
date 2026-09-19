@@ -99,12 +99,38 @@ agent/
 │   ├── agent-runtime/        # Agent 定义、Native Tools、MCP 管理、流式 Runner
 │   ├── data/                 # PGlite：聊天历史 + 知识库 + 向量检索 + embedding
 │   └── bot-core/             # 机器人抽象 + 飞书/企微适配器
-├── skills/ai-coding/         # AI 编码规范 skill（随仓库走）
-├── docs/design/              # 设计文档（本目录，按日期命名）
+├── .cursor/skills/ai-coding/ # AI 编码规范 skill（随仓库走）
+├── docs/                     # 文档（分类与命名见 docs/README.md）
 └── deploy/                   # docker-compose / k8s 清单
 ```
 
 依赖方向：`apps/* → packages/*`，`shared` 不依赖任何内部包；`agent-runtime` 依赖 `model-gateway` 和 `data`；`bot-core` 只依赖 `shared`（不反向依赖 runtime，由 web 层接线）。
+
+**应用层与底层能力严格分层**（应用层可任意替换/新增入口，底层不感知）：
+
+```mermaid
+flowchart TB
+  subgraph appLayer ["应用层 apps/（可替换的入口）"]
+    web["apps/web<br/>Next.js 全栈：页面 + API + bot webhook"]
+    cli["apps/cli<br/>fde 命令行"]
+  end
+  subgraph foundation ["底层能力 packages/（不依赖应用层）"]
+    runtime["agent-runtime<br/>Agent / 工具 / MCP / Runner"]
+    gateway["model-gateway<br/>模型流量切换"]
+    data["data<br/>PGlite 存储与检索"]
+    bot["bot-core<br/>机器人抽象"]
+    shared["shared<br/>类型契约"]
+  end
+  web --> runtime
+  web --> bot
+  cli --> runtime
+  runtime --> gateway
+  runtime --> data
+  bot --> shared
+  runtime --> shared
+  gateway --> shared
+  data --> shared
+```
 
 ## 5. 模块设计
 
