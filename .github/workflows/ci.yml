@@ -36,6 +36,9 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Dependency boundaries
+        run: pnpm lint:deps
+
       # GitHub runner 有 7GB 内存，本机 1.6GB 虚拟机跑不了的 next build 在这里跑
       - name: Build web
         run: pnpm --filter @fde/web run build
