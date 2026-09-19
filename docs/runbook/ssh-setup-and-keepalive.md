@@ -68,7 +68,30 @@ fi
 - 公钥需添加到 GitHub → Settings → SSH and GPG keys
 - 验证：`ssh -T git@github.com` 应返回 `Hi <用户名>!`
 
-## 5. 排障速查
+## 5. 本地域名（fde.local）
+
+用域名代替记不住的 DHCP IP。当前 IP `192.168.187.129`（VMware NAT DHCP，会变，见下方注意事项）。
+
+**Windows 端**（管理员 PowerShell，一次性）：
+
+```powershell
+Add-Content "$env:SystemRoot\System32\drivers\etc\hosts" "`n192.168.187.129 fde.local"
+```
+
+之后：`ssh` 配置里 HostName 可写 `fde.local`、浏览器访问 `http://fde.local:3000`。
+
+**本机端**（可选，让本机工具也能用域名）：
+
+```bash
+echo "127.0.0.1 fde.local" | sudo tee -a /etc/hosts
+```
+
+**注意：IP 会变**。VMware NAT 是 DHCP（本机 IP 已经从 .130 变过 .129）。要彻底固定，二选一：
+- VMware Virtual Network Editor → vmnet8 → DHCP 设置里给虚拟机 MAC 做静态绑定；
+- 或虚拟机内把 ens33 改成静态 IP（netplan 写死）。
+IP 变了又没做绑定的话，更新 Windows hosts 里那一行即可。
+
+## 6. 排障速查
 
 | 症状 | 排查 |
 |---|---|

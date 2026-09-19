@@ -5,9 +5,11 @@
 
 ## 1. 背景与目标
 
-fde-agent 是一个开源的智能工单诊断 agent：以知识库检索（RAG）为核心，提供 Web、CLI、IM 机器人三种接入方式，模型流量可在多家供应商间自由切换，本地优先、可私有化部署。
+fde-agent 是一个开源的**多场景智能体平台**：以知识库检索（RAG）+ 可插拔场景（scenario）为核心，提供 Web、CLI、IM 机器人三种接入方式，模型流量可在多家供应商间自由切换，本地优先、可私有化部署。
 
-- **fde-agent（web）**：类豆包聊天界面，核心能力是「基于知识库检索的工单诊断」，支持历史记录、知识库管理、模型切换；本地可跑，可部署到服务器/k8s。
+**首个场景是「工单诊断」**；平台会持续迭代新场景，路线图包括：简历修改、饮食规划、教育现实、劳动力经济、分析建模、电商报价、沙盘推演等。架构上场景以「Agent 定义（instructions + tools + 输出 schema + UI 入口）」注册接入，新增场景不动框架（见 5.3）。
+
+- **fde-agent（web）**：类豆包聊天界面，当前核心场景是「基于知识库检索的工单诊断」，支持历史记录、知识库管理、模型切换；本地可跑，可部署到服务器/k8s。
 - **fde-agent-cli**：命令行入口，抽象封装 claude / codex / cursor 等 coding CLI（订阅额度或 API Key 两种计费模式），可切换 GLM / DeepSeek / GPT / Claude / cursor 流量，对接 MCP。
 - **机器人接入**：飞书、企业微信等 IM 机器人，机器人层做抽象。
 - **AI coding 规范**：用 ai-coding skill 固化「设计先行 → 确认 → 编码 → 冒烟验证」流程与编码规范。
@@ -127,6 +129,7 @@ agent/
 - `tools.ts`：Native Tool——`search_knowledge_base`（RAG 检索，zod 参数校验）。
 - `mcp.ts`：`McpManager`，从 `FDE_MCP_SERVERS`（JSON）加载 stdio/http MCP server，Python 写的也行。
 - `agents.ts`：两个 Agent——聊天 Agent（流式 Markdown）与诊断 Agent（`outputType` 结构化：问题定位/根因分析/解决方案/预防措施/置信度）。
+- **场景可插拔（架构预留）**：每个场景 = 一份 Agent 定义（instructions + tools + 输出 schema + UI 入口）。当前场景硬编码在 `agents.ts`；当第二个场景（如简历修改）落地时，把 Agent 定义抽成 scenario 注册表（`packages/agent-runtime/scenarios/`），web/cli/bot 通过场景 id 选择，框架代码不变。
 - `run.ts`：`streamChat()` 把 SDK 事件归一化成 `ChatStreamEvent`；`runDiagnosis()` 返回结构化结果 + 引用溯源。
 
 ### 5.4 packages/data — 数据层
@@ -314,6 +317,7 @@ sequenceDiagram
 | M2 CLI | 后端抽象 + chat/diagnose 命令 | `fde chat` 切换后端可用 |
 | M3 机器人 | 飞书 + 企微适配器接入 | 群里 @ 机器人能诊断 |
 | M4 部署 | docker-compose + k8s manifest | 一键部署到自有服务器 |
+| M5 场景化 | scenario 注册表 + 第二个场景落地（候选：简历修改/饮食规划/分析建模/沙盘推演） | 新场景只加 scenario 定义，不改框架 |
 
 ## 11. 开放问题
 

@@ -1,6 +1,7 @@
 # fde-agent
 
-基于知识库检索的智能工单诊断 agent。全 TypeScript monorepo，本地优先、可私有化部署。
+开源多场景智能体平台：知识库检索（RAG）+ 可插拔场景，全 TypeScript monorepo，本地优先、可私有化部署。
+当前场景：**智能工单诊断**；路线图：简历修改、饮食规划、教育现实、劳动力经济、分析建模、电商报价、沙盘推演……
 
 - **Web**：豆包式聊天界面（Next.js 15 全栈），流式输出、历史记录、知识库管理、模型切换
 - **CLI**：`fde` 命令行，抽象封装 claude / codex / cursor CLI（订阅额度或 API Key），也可直连 API
