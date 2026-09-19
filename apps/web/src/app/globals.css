@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+/* 主题运行时变量（亮/暗）——改色只动这里 */
+:root {
+  --surface: #ffffff;
+  --sidebar: #f7f8fa;
+  --border: #e5e7eb;
+  --ink: #1f2329;
+  --secondary: #646a73;
+  --primary: #3370ff;
+  --bubble-user: #e8f1ff;
+  --danger: #f53f3f;
+  --hover: rgba(127, 127, 127, 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #17181a;
+    --sidebar: #1f2124;
+    --border: #2e3033;
+    --ink: #e8e9eb;
+    --secondary: #9ba0a5;
+    --primary: #4c88ff;
+    --bubble-user: #26374d;
+    --danger: #f56565;
+    --hover: rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* 注册为 Tailwind 语义工具类：bg-surface / bg-sidebar / border-border /
+   text-ink / text-secondary / bg-primary / bg-bubble-user / text-danger / bg-hover */
+@theme inline {
+  --color-surface: var(--surface);
+  --color-sidebar: var(--sidebar);
+  --color-border: var(--border);
+  --color-ink: var(--ink);
+  --color-secondary: var(--secondary);
+  --color-primary: var(--primary);
+  --color-bubble-user: var(--bubble-user);
+  --color-danger: var(--danger);
+  --color-hover: var(--hover);
+}
+
+body {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+/* streaming caret */
+.stream-caret::after {
+  content: "▍";
+  animation: blink 1s steps(1) infinite;
+  color: var(--primary);
+}
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* markdown body defaults */
+.markdown-body {
+  line-height: 1.7;
+  word-break: break-word;
+}
+.markdown-body pre {
+  background: var(--hover);
+  border-radius: 8px;
+  padding: 12px;
+  overflow-x: auto;
+  font-size: 13px;
+}
+.markdown-body code {
+  background: var(--hover);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 0.9em;
+}
+.markdown-body pre code {
+  background: transparent;
+  padding: 0;
+}
+.markdown-body ul, .markdown-body ol {
+  padding-left: 1.4em;
+  margin: 0.4em 0;
+}
+.markdown-body ul { list-style: disc; }
+.markdown-body ol { list-style: decimal; }
+.markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4 {
+  font-weight: 600;
+  margin: 0.8em 0 0.4em;
+}
+.markdown-body p { margin: 0.4em 0; }
+.markdown-body table { border-collapse: collapse; margin: 0.6em 0; }
+.markdown-body th, .markdown-body td {
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  font-size: 13px;
+}

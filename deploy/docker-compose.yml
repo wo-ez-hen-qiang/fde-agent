@@ -1,0 +1,17 @@
+# fde-agent 单机部署
+# PGlite 是嵌入式的，单容器即可；数据落在 named volume。
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - ../.env
+    volumes:
+      - fde-data:/app/.data
+    restart: unless-stopped
+
+volumes:
+  fde-data:

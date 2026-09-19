@@ -1,0 +1,27 @@
+{
+  "name": "@fde/agent-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@fde/data": "workspace:*",
+    "@fde/model-gateway": "workspace:*",
+    "@fde/shared": "workspace:*",
+    "@openai/agents": "latest",
+    "@openai/agents-extensions": "latest",
+    "ai": "^7.0.107",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "typescript": "^5.6.0"
+  }
+}

@@ -1,0 +1,36 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo
+.idea/
+.vscode/
+*.log
+
+# Cursor local state, but keep project skills in the repo
+.cursor/*
+!.cursor/skills/
+
+# Node
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+.next/
+out/
+*.tsbuildinfo
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# Local data (embedded PGlite db, uploads)
+.data/
+data/
+uploads/
+
+# Legacy template junk
+/public/dist/

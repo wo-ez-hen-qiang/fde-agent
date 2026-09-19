@@ -1,0 +1,31 @@
+{
+  "name": "fde-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "fde-agent: knowledge-base-driven ticket diagnosis agent (web + cli + bots)",
+  "packageManager": "pnpm@10.0.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel run dev",
+    "dev:web": "pnpm --filter @fde/web run dev",
+    "dev:cli": "pnpm --filter @fde/cli run dev",
+    "build": "pnpm -r run build",
+    "lint": "eslint .",
+    "typecheck": "pnpm -r --if-present run typecheck",
+    "test": "pnpm -r --if-present run test",
+    "clean": "pnpm -r --if-present run clean",
+    "rebuild": "bash scripts/rebuild.sh",
+    "prepare": "git config core.hooksPath .githooks"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "prettier": "^3.3.0",
+    "eslint": "^9.13.0",
+    "typescript-eslint": "^8.11.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  }
+}
