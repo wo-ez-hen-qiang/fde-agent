@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# fde-agent git 门禁：commit message 必须带 AI-Model trailer（ai-coding skill 第 10 条）
+set -euo pipefail
+
+MSG_FILE="$1"
+if ! grep -qE '^AI-Model: .+' "$MSG_FILE"; then
+  echo "[gate] 失败：commit message 缺少 'AI-Model: <模型名>' trailer" >&2
+  echo "       示例：feat(web): xxx" >&2
+  echo "       " >&2
+  echo "       AI-Model: kimi-k3   （人工提交写 AI-Model: human）" >&2
+  exit 1
+fi

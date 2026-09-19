@@ -9,7 +9,7 @@
 | `design/` | 功能/模块设计文档（ai-coding 流程产物，编码前必经） | `YYYY-MM-DD-<kebab-case 主题>.md` | 可更新（需求变更时同步修订，顶部状态流转：待确认 → 已确认 → 已实现） |
 | `adr/` | 架构决策记录（难撤销的技术选型、 trade-off 决策） | `NNNN-<kebab-case 标题>.md`（四位递增编号） | 只追加不改写；被推翻时新建一篇 ADR 标记 supersede 旧文 |
 | `prototypes/` | 前端单文件 HTML 原型（视觉/交互确认用） | `YYYY-MM-DD-<名称>.html` | 确认并落成组件后可删除 |
-| `runbook/` | 运维与操作手册（部署、机器人配置、故障处理、密钥轮换） | `<kebab-case 主题>.md` | 持续维护 |
+| `runbook/` | 运维与操作手册（开发环境搭建、部署、机器人配置、故障处理、密钥轮换） | `<kebab-case 主题>.md` | 持续维护 |
 
 ## 判定规则
 

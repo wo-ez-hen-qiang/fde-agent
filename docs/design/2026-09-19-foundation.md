@@ -1,6 +1,6 @@
 # fde-agent 地基设计文档
 
-> 状态：已确认 | 日期：2026-09-19 | 作者：伊泽瑞尔 + AI
+> 状态：已确认 | 日期：2026-09-19 | 作者：伊泽瑞尔 + AI (kimi-k3)
 > 确认流程：本文档经伊泽瑞尔确认后才进入编码（ai-coding skill 核心流程）。
 
 ## 1. 背景与目标
@@ -10,7 +10,7 @@ fde-agent 是一个开源的智能工单诊断 agent：以知识库检索（RAG�
 - **fde-agent（web）**：类豆包聊天界面，核心能力是「基于知识库检索的工单诊断」，支持历史记录、知识库管理、模型切换；本地可跑，可部署到服务器/k8s。
 - **fde-agent-cli**：命令行入口，抽象封装 claude / codex / cursor 等 coding CLI（订阅额度或 API Key 两种计费模式），可切换 GLM / DeepSeek / GPT / Claude / cursor 流量，对接 MCP。
 - **机器人接入**：飞书、企业微信等 IM 机器人，机器人层做抽象。
-- **AI coding 规范**：用 ai-coding skill 固化「设计先行 → 确认 → 编码」流程与编码规范。
+- **AI coding 规范**：用 ai-coding skill 固化「设计先行 → 确认 → 编码 → 冒烟验证」流程与编码规范。
 
 非目标（本阶段不做）：多用户权限体系、计费、企业内部系统对接。
 
@@ -294,7 +294,7 @@ sequenceDiagram
 3. **类型契约**：跨包数据结构一律先进 `packages/shared`，禁止各自定义重复类型。
 4. **依赖方向**：只允许 `apps → packages`，包间依赖单向，禁止循环依赖。
 5. **配置走 env**：密钥/端点只读 env，`.env.example` 同步更新，禁止硬编码。
-6. **完成定义**：`pnpm typecheck` 与 `pnpm lint` 全绿；新包附带最小冒烟路径。
+6. **完成定义**：`pnpm typecheck` 与 `pnpm lint` 全绿；关键路径冒烟通过（服务端 curl 实测、CLI 实跑、UI 交互用 Playwright 实测）。
 7. **提交规范**：Conventional Commits（`feat(cli): ...`）；里程碑提交同步更新 `VERSION` 文件。
 8. **git 门禁**：`.githooks/pre-commit` 强制每次提交通过 VERSION 同步 + typecheck + lint；`pnpm install` 时自动挂载（`prepare` 脚本）。
 
