@@ -91,6 +91,8 @@ echo "127.0.0.1 fde.local" | sudo tee -a /etc/hosts
 - 或虚拟机内把 ens33 改成静态 IP（netplan 写死）。
 IP 变了又没做绑定的话，更新 Windows hosts 里那一行即可。
 
+**代理软件注意（Clash 等）**：浏览器访问 `fde.local` 不通但 `ping` / PowerShell `curl` 都通，是浏览器走了系统代理、代理服务器不认识这个假域名。解法：Clash Verge Rev → 设置 → 系统代理 →「代理绕过」追加 `;fde.local;192.168.187.129`，保存后重开系统代理开关。（不要只在 Windows 代理设置里改——Clash 开系统代理时会覆盖它；也不要用 `DOMAIN-SUFFIX,fde.local,DIRECT` 规则——请求仍进 Clash，而 Clash 的 DNS 不一定读 Windows hosts。）
+
 ## 6. 排障速查
 
 | 症状 | 排查 |
@@ -99,3 +101,5 @@ IP 变了又没做绑定的话，更新 Windows hosts 里那一行即可。
 | 几分钟不用就断 | 客户端 ServerAliveInterval 是否生效（`ssh -G` 查看）；服务端 drop-in 是否 reload |
 | 重连后任务没了 | 是否进了 tmux（`tmux ls`）；`.bashrc` 自动 attach 是否生效 |
 | Cursor 连不上 | 看 Output → Remote-SSH 日志；先纯终端 `ssh fde-home` 验证通不通 |
+| 浏览器访问 fde.local 不通（ping/curl 通） | 浏览器走了系统代理：Clash「代理绕过」加 `;fde.local;192.168.187.129` 并重开开关（见第 5 节） |
+| 浏览器/服务都不通（curl 也不通） | 服务进程是否活着：本机 `curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/`；挂了用 `pnpm rebuild -- --restart` 或 `pnpm --filter @fde/web start` 拉起 |
