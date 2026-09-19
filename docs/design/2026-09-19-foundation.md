@@ -12,7 +12,7 @@ fde-agent 是一个开源的**多场景智能体平台**：以知识库检索（
 - **fde-agent（web）**：类豆包聊天界面，当前核心场景是「基于知识库检索的工单诊断」，支持历史记录、知识库管理、模型切换；本地可跑，可部署到服务器/k8s。
 - **fde-agent-cli**：命令行入口，抽象封装 claude / codex / cursor 等 coding CLI（订阅额度或 API Key 两种计费模式），可切换 GLM / DeepSeek / GPT / Claude / cursor 流量，对接 MCP。
 - **机器人接入**：飞书、企业微信等 IM 机器人，机器人层做抽象。
-- **AI coding 规范**：用 ai-coding skill 固化「设计先行 → 确认 → 编码 → 冒烟验证」流程与编码规范。
+- **AI coding 规范**：用仓库根 `AGENTS.md` 固化「设计先行 → 确认 → 编码 → 冒烟验证」流程；Cursor / Claude Code / Codex CLI 共用同一份（见 [ADR 0002](../adr/0002-tool-agnostic-agent-instructions.md)）。
 
 非目标（本阶段不做）：多用户权限体系、计费、企业内部系统对接。
 

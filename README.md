@@ -40,14 +40,16 @@ packages/model-gateway  模型别名注册 + LanguageModel 解析
 packages/agent-runtime  OpenAI Agents SDK 封装：Agent / Native Tool / MCP / 流式 Runner
 packages/data       PGlite：聊天历史 + 知识库 + 向量检索
 packages/bot-core   机器人抽象 + 飞书/企微适配器
-.cursor/skills/ai-coding  AI 编码规范（设计 → 确认 → 编码）
-docs/design/        设计文档
+AGENTS.md            开发规范正文（Cursor / Claude Code / Codex 共用）
+CLAUDE.md            Claude Code 入口（指针）
+.cursor/skills/ai-coding  Cursor 入口（指针）
+docs/               设计文档 / ADR / runbook
 deploy/             docker-compose / k8s
 ```
 
 ## 开发约定
 
-本仓库由 AI coding 驱动，**所有非 trivial 改动先写设计文档（`docs/design/`）并经确认后再编码**，详见 `.cursor/skills/ai-coding/SKILL.md`。
+本仓库由 AI coding 驱动，**规范正文在 [AGENTS.md](AGENTS.md)**，Cursor / Claude Code / Codex CLI 共用同一份。所有非 trivial 改动先写设计文档（`docs/design/`）并经确认后再编码。
 
 ```bash
 pnpm typecheck   # 类型检查（提交前必须全绿）

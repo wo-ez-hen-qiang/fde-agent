@@ -13,7 +13,7 @@
 
 ## 判定规则
 
-- 要写代码了，先想：这个改动需要设计吗？→ 非 trivial 就要 `design/`（见 `.cursor/skills/ai-coding`）。
+- 要写代码了，先想：这个改动需要设计吗？→ 非 trivial 就要 `design/`（规范正文见仓库根 `AGENTS.md`，Cursor / Claude / Codex 共用）。
 - 做了一个「以后很难反悔」的选型（数据库、框架、协议、供应商）→ 补一篇 `adr/`。
 - 前端视觉拿不准 → 先 `prototypes/` 出原型，确认后再写组件。
 - 重复操作超过两次（部署、联调、排障）→ 沉淀到 `runbook/`。

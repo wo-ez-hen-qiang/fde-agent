@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- 开发规范工具无关：`AGENTS.md` 为唯一正文；Cursor skill / `CLAUDE.md` 只做指针（ADR 0002）。Cursor / Claude Code / Codex CLI 共用同一套设计→确认→编码流程。
+
 ## [0.1.0] - 2026-09-19
 
 地基里程碑（M0）：monorepo 骨架与全链路冒烟通过。
