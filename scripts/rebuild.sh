@@ -27,6 +27,16 @@ done
 
 step() { echo; echo "==> $*"; }
 
+# 低内存保护：next build 峰值约 2GB。可用内存不足时拒绝构建，
+# 防止把整机（含 SSH/Cursor 转发通道）拖死。虚拟机扩容后此保护自动放行。
+AVAIL_MB=$(free -m | awk '/^Mem:/ {print $7}')
+if [ "$AVAIL_MB" -lt 2048 ]; then
+  echo "[rebuild] 拒绝构建：可用内存 ${AVAIL_MB}MB < 2048MB，next build 会 OOM。"
+  echo "  临时方案: pnpm dev:web（开发模式，按需编译，内存占用低）"
+  echo "  根治方案: 扩大虚拟机内存，或加 swap，见 docs/runbook/dev-environment-setup.md"
+  exit 1
+fi
+
 if [ "$SKIP_INSTALL" = "1" ]; then
   step "1/3 跳过依赖安装"
 else
