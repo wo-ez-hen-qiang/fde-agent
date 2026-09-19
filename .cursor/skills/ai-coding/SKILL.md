@@ -11,12 +11,17 @@ description: Enforces fde-agent's AI coding workflow - design doc first, owner c
 
 ```
 Task Progress:
+- [ ] 0. 环境自检：运行 pnpm doctor（见下）
 - [ ] 1. 设计：写设计文档到 docs/design/yyyy-mm-dd-<主题>.md
 - [ ] 2. 确认：向伊泽瑞尔呈现文档要点，获得明确确认
 - [ ] 3. 编码：按文档实现，不偏离已确认的架构
 - [ ] 4. 冒烟测试：实际运行关键路径（启动服务/调 API/跑命令），不许只看编译通过
 - [ ] 5. 验收：typecheck + lint 全绿，向伊泽瑞尔汇报冒烟结果
 ```
+
+**Step 0：环境自检（每次会话首次载入本 skill 时执行）**。运行 `pnpm doctor`：
+- 输出「已通过（日期），跳过」→ 直接继续，不要重复检查。
+- 有 ❌ 项 → 按输出提示修复（详细指引在 `docs/runbook/dev-environment-setup.md`），修复后 `pnpm doctor -- --force` 复跑，全绿再开始干活。
 
 **Step 1：设计文档**。包含：目标/非目标、方案对比与选型理由、模块职责与接口（关键类型签名）、数据模型变更、时序图（复杂流程用 mermaid）、对现有代码的影响面。文档分类与命名规范见 [docs/README.md](../../../docs/README.md)（设计文档 `docs/design/YYYY-MM-DD-<主题>.md`；难撤销的选型另补 `docs/adr/NNNN-<标题>.md`）。**文档顶部必须标注作者，AI 参与的要写明模型名**，如 `作者：伊泽瑞尔 + AI (kimi-k3)`。
 

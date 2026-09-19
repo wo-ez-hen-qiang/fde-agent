@@ -17,6 +17,7 @@
     "test": "pnpm -r --if-present run test",
     "clean": "pnpm -r --if-present run clean",
     "rebuild": "bash scripts/rebuild.sh",
+    "doctor": "bash scripts/doctor.sh",
     "prepare": "git config core.hooksPath .githooks"
   },
   "devDependencies": {
