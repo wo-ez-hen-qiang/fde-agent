@@ -1,5 +1,40 @@
-import type { BotPlatform } from "@fde/shared";
-import type { BotAdapter, BotEventHandler, BotWebhookRequest, BotWebhookResult } from "./types.js";
+import type { BotPlatform, UnifiedBotEvent } from "@fde/shared";
+import { EventDeduper } from "./dedupe.js";
+import type {
+  BotAdapter,
+  BotEventHandler,
+  BotTaskScheduler,
+  BotWebhookRequest,
+  BotWebhookResult,
+} from "./types.js";
+
+export interface BotDispatcherOptions {
+  deduper?: EventDeduper;
+  /** Default scheduler for the async reply work (per-call override via dispatch()). */
+  schedule?: BotTaskScheduler;
+}
+
+export interface DispatchOptions {
+  schedule?: BotTaskScheduler;
+}
+
+const fireAndForget: BotTaskScheduler = (task) => {
+  void task();
+};
+
+/** Fallback reply when the agent pipeline throws; never leaks internal error details. */
+export const BOT_FAILURE_REPLY = "抱歉，处理这条消息时出错了，请稍后重试。";
+
+/**
+ * Stable conversation key used to map a platform chat to an agent session:
+ * - p2p: one session per chat (= per user)
+ * - group: one session per (group, sender), so people in the same group don't share context
+ */
+export function botConversationKey(event: UnifiedBotEvent): string {
+  return event.chatType === "group"
+    ? `${event.platform}:group:${event.chatId}:${event.userId}`
+    : `${event.platform}:p2p:${event.chatId}`;
+}
 
 /**
  * Routes platform webhooks to adapters, dedups events, invokes the agent
@@ -7,12 +42,22 @@ import type { BotAdapter, BotEventHandler, BotWebhookRequest, BotWebhookResult }
  */
 export class BotDispatcher {
   private adapters = new Map<BotPlatform, BotAdapter>();
-  private seenEvents = new Set<string>();
+  private readonly deduper: EventDeduper;
+  private readonly schedule: BotTaskScheduler;
   private handler: BotEventHandler | null = null;
+
+  constructor(opts: BotDispatcherOptions = {}) {
+    this.deduper = opts.deduper ?? new EventDeduper();
+    this.schedule = opts.schedule ?? fireAndForget;
+  }
 
   register(adapter: BotAdapter): this {
     this.adapters.set(adapter.platform, adapter);
     return this;
+  }
+
+  has(platform: BotPlatform): boolean {
+    return this.adapters.has(platform);
   }
 
   onEvent(handler: BotEventHandler): this {
@@ -21,11 +66,24 @@ export class BotDispatcher {
   }
 
   /** Entry point for web framework routes. Safe: never throws. */
-  async dispatch(platform: BotPlatform, req: BotWebhookRequest): Promise<BotWebhookResult> {
+  async dispatch(
+    platform: BotPlatform,
+    req: BotWebhookRequest,
+    opts: DispatchOptions = {},
+  ): Promise<BotWebhookResult> {
     const adapter = this.adapters.get(platform);
     if (!adapter) return { kind: "ignored", reason: `no adapter for ${platform}` };
 
-    const result = await adapter.handleWebhook(req);
+    let result: BotWebhookResult;
+    try {
+      result = await adapter.handleWebhook(req);
+    } catch (err) {
+      console.error(
+        `[bot-core] ${platform} webhook handling failed:`,
+        err instanceof Error ? err.message : err,
+      );
+      return { kind: "ignored", reason: "adapter error" };
+    }
     if (result.kind !== "event") return result;
 
     const { event } = result;
@@ -34,28 +92,44 @@ export class BotDispatcher {
       return { kind: "ignored", reason: "group message without mention" };
     }
     // dedup by platform event id (platforms retry webhooks)
-    const dedupKey = `${event.platform}:${event.eventId}`;
-    if (this.seenEvents.has(dedupKey)) {
+    if (!this.deduper.firstSeen(`${event.platform}:${event.eventId}`)) {
       return { kind: "ignored", reason: "duplicate event" };
     }
-    this.seenEvents.add(dedupKey);
-    if (this.seenEvents.size > 10_000) this.seenEvents.clear();
 
-    if (!this.handler) return { kind: "ignored", reason: "no handler wired" };
+    const handler = this.handler;
+    if (!handler) return { kind: "ignored", reason: "no handler wired" };
 
     // reply asynchronously - platforms need a fast 200 response
-    void (async () => {
-      try {
-        const { replyText } = await this.handler!(event);
-        await adapter.sendMessage({ chatId: event.chatId, text: replyText });
-      } catch (err) {
-        console.error(
-          `[bot-core] handle ${platform} event failed:`,
-          err instanceof Error ? err.message : err,
-        );
-      }
-    })();
-
+    (opts.schedule ?? this.schedule)(() => this.process(adapter, handler, event));
     return result;
+  }
+
+  private async process(
+    adapter: BotAdapter,
+    handler: BotEventHandler,
+    event: UnifiedBotEvent,
+  ): Promise<void> {
+    let replyText: string;
+    try {
+      ({ replyText } = await handler(event));
+    } catch (err) {
+      console.error(
+        `[bot-core] ${event.platform} agent handler failed:`,
+        err instanceof Error ? err.message : err,
+      );
+      replyText = BOT_FAILURE_REPLY;
+    }
+    try {
+      await adapter.sendMessage({
+        chatId: event.chatId,
+        text: replyText,
+        replyTo: event.messageId,
+      });
+    } catch (err) {
+      console.error(
+        `[bot-core] ${event.platform} send reply failed:`,
+        err instanceof Error ? err.message : err,
+      );
+    }
   }
 }

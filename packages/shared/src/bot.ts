@@ -11,6 +11,8 @@ export interface UnifiedBotEvent {
   chatId: string;
   /** sender id on the platform. */
   userId: string;
+  /** platform message id (used to reply in-thread). */
+  messageId?: string;
   /** display name if resolvable. */
   userName?: string;
   /** plain-text content extracted from the platform payload. */
