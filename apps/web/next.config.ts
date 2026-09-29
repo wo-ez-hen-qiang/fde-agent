@@ -10,7 +10,12 @@ const nextConfig: NextConfig = {
     "@fde/bot-core",
   ],
   // PGlite loads WASM/tarball assets from disk; keep it (and its extensions) out of the bundler
-  serverExternalPackages: ["@electric-sql/pglite", "@electric-sql/pglite-pgvector"],
+  serverExternalPackages: [
+    "@electric-sql/pglite",
+    "@electric-sql/pglite-pgvector",
+    "@huggingface/transformers",
+    "onnxruntime-node",
+  ],
   webpack: (config, { isServer }) => {
     // workspace packages use Node-ESM style ".js" specifiers that point to ".ts" sources
     config.resolve.extensionAlias = {
@@ -24,6 +29,8 @@ const nextConfig: NextConfig = {
       config.externals.push({
         "@electric-sql/pglite": "commonjs @electric-sql/pglite",
         "@electric-sql/pglite-pgvector": "commonjs @electric-sql/pglite-pgvector",
+        "@huggingface/transformers": "commonjs @huggingface/transformers",
+        "onnxruntime-node": "commonjs onnxruntime-node",
       });
     }
     return config;

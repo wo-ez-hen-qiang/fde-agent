@@ -1,18 +1,18 @@
 import { randomUUID } from "node:crypto";
 import type { KnowledgeBase, KnowledgeDocument, KnowledgeSearchHit } from "@fde/shared";
 import { getDb } from "./db.js";
-import type { EmbeddingClient } from "./embeddings.js";
+import type { TextEmbedder } from "./embeddings.js";
 import { splitText } from "./splitter.js";
 
 /** Knowledge base persistence + vector retrieval (pgvector on PGlite). */
 export class KnowledgeStore {
-  constructor(private readonly embedder: EmbeddingClient) {}
+  constructor(private readonly embedder: TextEmbedder) {}
 
   async createKnowledgeBase(name: string, description?: string): Promise<KnowledgeBase> {
     const db = await getDb();
     const id = randomUUID();
     const now = Date.now();
-    const embeddingModel = process.env.FDE_EMBEDDING_MODEL ?? "embedding-3";
+    const embeddingModel = process.env.FDE_EMBEDDING_MODEL ?? "bge-small-zh-v1.5";
     await db.query(
       `INSERT INTO knowledge_bases (id, name, description, embedding_model, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5, $6)`,
@@ -100,7 +100,7 @@ export class KnowledgeStore {
   /** Cosine-similarity search inside one knowledge base. */
   async search(knowledgeBaseId: string, query: string, topK = 5): Promise<KnowledgeSearchHit[]> {
     const db = await getDb();
-    const vec = await this.embedder.embedOne(query);
+    const vec = await this.embedder.embedQuery(query);
     const res = await db.query<{
       id: string;
       document_id: string;

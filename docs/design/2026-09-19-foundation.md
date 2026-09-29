@@ -80,7 +80,7 @@ flowchart TB
 | Agent Runtime | `@openai/agents`（OpenAI Agents SDK JS 版） | 原生支持 MCP、流式、结构化输出、tool 审批；与「Native Tool + MCP」模型完全对齐 |
 | 多模型接入 | Vercel AI SDK provider + `@openai/agents-extensions` 的 `aisdk()` 桥接 | GLM/DeepSeek 走 OpenAI 兼容端点，GPT/Claude 走官方 SDK，一处切换全部生效 |
 | 数据库 | PGlite（WASM 嵌入式 Postgres）+ pgvector | 零外部服务、免 Docker；接口隔离，后续可换真 Postgres |
-| Embedding | GLM `embedding-3`（OpenAI 兼容接口） | 国内直连、便宜；通过 env 可换 |
+| Embedding | 本地 `bge-small-zh-v1.5`（512 维）；GLM `embedding-3` 仍可通过 env 切回 | 知识库可离线嵌入；`bge-base` / `bge-large` 留作后续评估，见 5.4.1 |
 | CLI | Node + `commander`，子进程封装各家 CLI | 与主流 coding CLI 封装思路一致 |
 | 机器人 | 自研薄适配层（无第三方 SDK 重依赖） | 飞书/企微协议都是 HTTP + 加解密，`node:crypto` 足够 |
 | 包管理 | pnpm workspace | monorepo 标配 |
@@ -164,6 +164,22 @@ flowchart TB
 - `KnowledgeStore`：建库、文档入库（split → embed → 存 chunk）、余弦相似度检索。
 - `ChatStore`：会话 CRUD、消息追加、首条消息自动起标题。
 - 文本切分：段落优先递归切分（500 字 / 重叠 50），接口隔离可替换。
+
+#### 5.4.1 Embedding 选型（2026-09-29）
+
+> 补充：奥恩 + AI (Grok 4.7)。当前默认改为本地 BGE small；base / large 不接入默认路径，只作为后续技术评估。
+
+文档入库时，图片已替换成相对路径（文件名是原图 id）。这段路径和正文一起做向量，检索命中后再按路径取图、交给多模态模型读图。切块约 500 字，三条 BGE 的 512 token 上限都够用。
+
+| 模型 | 维度 | 体量 | 角色 |
+|---|---|---|---|
+| `bge-small-zh-v1.5` | 512 | 约 24M 参数 / 100MB | **当前默认**。本机 ONNX（`Xenova/bge-small-zh-v1.5`，q8）。权重默认从 `hf-mirror.com` 拉，可用 `HF_ENDPOINT` 改 |
+| `bge-base-zh-v1.5` | 768 | 约 102M 参数 / 400MB | 后续评估。中文检索明显强于 small，内存仍可能落在这台 2.6GB 机器上 |
+| `bge-large-zh-v1.5` | 1024 | 约 326M 参数 / 1.3GB | 后续评估。BGE v1.5 中文里效果最好的一档，要单独看内存和单条耗时 |
+
+评估时用同一套语料（`knowledge/tencent-adp/`）比三件事：召回是否找回含图片路径的段落、本机单条嵌入耗时、进程内存。查询侧加 BGE 前缀「为这个句子生成表示以用于检索相关文章：」，文档侧不加，避免改写图片路径字符串。
+
+换模型必须整库重嵌。一个知识库只记录一种 `embedding_model`，512 / 768 / 1024 不能混在同一次检索里。GLM `embedding-3`（默认 2048 维，0.5 元/百万 tokens）保留为 `FDE_EMBEDDING_PROVIDER=glm`，不作为当前默认。
 
 ### 5.5 packages/bot-core — 机器人层
 
@@ -347,6 +363,6 @@ sequenceDiagram
 
 ## 11. 开放问题
 
-1. embedding 默认用 GLM `embedding-3`（2048 维），是否需要本地 embedding 兜底（离线场景）？
+1. ~~embedding 默认用 GLM `embedding-3`~~ 已决定：默认本地 `bge-small-zh-v1.5`。`bge-base-zh-v1.5` / `bge-large-zh-v1.5` 的评估标准见 5.4.1，评估通过前不改默认。
 2. 诊断 Agent 是否需要「多轮澄清」能力（信息不足时反问），还是首版一次性出报告？
 3. 企微机器人用「应用消息回调」还是「群机器人 webhook」（前者功能全、后者零开发只能发不能收）？默认按前者设计。

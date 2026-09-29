@@ -14,7 +14,8 @@
   "dependencies": {
     "@electric-sql/pglite": "latest",
     "@electric-sql/pglite-pgvector": "^0.0.9",
-    "@fde/shared": "workspace:*"
+    "@fde/shared": "workspace:*",
+    "@huggingface/transformers": "^4.3.0"
   },
   "devDependencies": {
     "@types/node": "^22",

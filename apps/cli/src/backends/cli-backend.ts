@@ -37,7 +37,7 @@ const CLI_SPECS: CliSpec[] = [
     binEnv: "FDE_CLI_CURSOR_BIN",
     defaultBin: "cursor-agent",
     apiKeyEnv: "CURSOR_API_KEY",
-    args: (prompt) => ["-p", prompt],
+    args: (prompt) => ["-p", "--mode", "ask", "--trust", prompt],
   },
 ];
 

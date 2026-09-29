@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- 知识库默认嵌入改为本地 `bge-small-zh-v1.5`（512 维）。`bge-base-zh-v1.5` / `bge-large-zh-v1.5` 仅登记为后续评估，见设计文档 5.4.1。GLM `embedding-3` 仍可通过 `FDE_EMBEDDING_PROVIDER=glm` 使用。
+
 ### Added
 
 - 开发规范工具无关：`AGENTS.md` 为唯一正文；Cursor skill / `CLAUDE.md` 只做指针（ADR 0002）。Cursor / Claude Code / Codex CLI 共用同一套设计→确认→编码流程。

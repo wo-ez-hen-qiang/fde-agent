@@ -1,15 +1,29 @@
 /**
- * Embedding client over any OpenAI-compatible /embeddings endpoint
- * (GLM embedding-3 by default). Kept dependency-free on purpose.
+ * Text embeddings. Default is local bge-small-zh-v1.5.
+ * GLM embedding-3 stays available when FDE_EMBEDDING_PROVIDER=glm.
  */
+import { embedBgeDocuments, embedBgeQuery, isBgeModelId, type BgeModelId } from "./bge.js";
+
+export interface TextEmbedder {
+  readonly model: string;
+  embed(texts: string[]): Promise<number[][]>;
+  embedOne(text: string): Promise<number[]>;
+  /** Retrieval query. BGE adds the Chinese query prefix; API models do not. */
+  embedQuery(text: string): Promise<number[]>;
+}
+
 export interface EmbeddingClientOptions {
   baseUrl: string;
   apiKey: string;
   model: string;
 }
 
-export class EmbeddingClient {
-  constructor(private readonly opts: EmbeddingClientOptions) {}
+export class EmbeddingClient implements TextEmbedder {
+  readonly model: string;
+
+  constructor(private readonly opts: EmbeddingClientOptions) {
+    this.model = opts.model;
+  }
 
   async embed(texts: string[]): Promise<number[][]> {
     if (texts.length === 0) return [];
@@ -35,11 +49,42 @@ export class EmbeddingClient {
     if (!vec) throw new Error("Embedding response was empty");
     return vec;
   }
+
+  async embedQuery(text: string): Promise<number[]> {
+    return this.embedOne(text);
+  }
 }
 
-/** Build the default client from env (GLM by default). */
-export function embeddingClientFromEnv(env: NodeJS.ProcessEnv = process.env): EmbeddingClient {
-  const provider = env.FDE_EMBEDDING_PROVIDER ?? "glm";
+class LocalBgeEmbedder implements TextEmbedder {
+  constructor(readonly model: BgeModelId) {}
+
+  embed(texts: string[]): Promise<number[][]> {
+    return embedBgeDocuments(this.model, texts);
+  }
+
+  async embedOne(text: string): Promise<number[]> {
+    const [vec] = await this.embed([text]);
+    if (!vec) throw new Error("Embedding response was empty");
+    return vec;
+  }
+
+  embedQuery(text: string): Promise<number[]> {
+    return embedBgeQuery(this.model, text);
+  }
+}
+
+/** Build the embedder from env. Default is local bge-small-zh-v1.5. */
+export function embeddingClientFromEnv(env: NodeJS.ProcessEnv = process.env): TextEmbedder {
+  const provider = env.FDE_EMBEDDING_PROVIDER ?? "local";
+  const model = env.FDE_EMBEDDING_MODEL ?? "bge-small-zh-v1.5";
+  if (provider === "local" || provider === "bge") {
+    if (!isBgeModelId(model)) {
+      throw new Error(
+        `Unknown local embedding model "${model}". Use bge-small-zh-v1.5, bge-base-zh-v1.5, or bge-large-zh-v1.5.`,
+      );
+    }
+    return new LocalBgeEmbedder(model);
+  }
   const prefix = provider.toUpperCase();
   const apiKey = env[`${prefix}_API_KEY`];
   const baseUrl =
@@ -53,6 +98,6 @@ export function embeddingClientFromEnv(env: NodeJS.ProcessEnv = process.env): Em
   return new EmbeddingClient({
     baseUrl,
     apiKey,
-    model: env.FDE_EMBEDDING_MODEL ?? "embedding-3",
+    model,
   });
 }
