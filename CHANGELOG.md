@@ -7,10 +7,26 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-29
+
+飞书机器人里程碑（M3 · 飞书）：私聊 / 群里 @机器人即可走知识库诊断流程，回复回到飞书。
+
 ### Added
 
+- **飞书机器人**（`packages/bot-core` + `/api/bots/feishu`）：事件订阅回调完整实现 —— `url_verification` 握手、Verification Token 校验、Encrypt Key 下 AES-256-CBC 解密 + `X-Lark-Signature` 验签；`im.message.receive_v1` 文本消息解析（群聊按机器人 open_id 判定 @ 并剥离 @ 占位符）；在线程内回复（`/im/v1/messages/{id}/reply`），`tenant_access_token` 缓存至过期前 5 分钟、并发共享、失效自动刷新重试；支持 Lark 国际版（`FEISHU_BASE_URL`）。
+- **异步处理与去重**：回调 3s 内 ack，agent 运行与回复通过 Next.js `after()` 异步执行；`EventDeduper` 按 `event_id` TTL 去重（12h / 1 万条）。
+- **机器人会话绑定**：`bot_conversations` 表（`packages/data` `BotSessionStore`），私聊按会话、群聊按「群 + 发送者」持久绑定 agent 会话，追问带历史；`/new` 开新会话；同一会话消息串行处理。
+- `GET /api/bots/feishu` 配置状态探针；缺配置时 `POST` 返回 `503 {error}` 并列出缺失 env。
+- 新 env：`FEISHU_BASE_URL`、`FDE_BOT_MODEL`、`FDE_BOT_KNOWLEDGE_BASE_ID`（`.env.example` 已同步）。
+- 单元测试：`packages/bot-core` 接入 `node:test` + `tsx`（`pnpm test`，38 个用例：解密/验签、challenge、去重、消息解析、回复调用），CI 新增 Test 步骤。
+- 文档：设计 `docs/design/2026-09-29-feishu-bot.md`，配置与联调 `docs/runbook/feishu-bot-setup.md`。
 - 开发规范工具无关：`AGENTS.md` 为唯一正文；Cursor skill / `CLAUDE.md` 只做指针（ADR 0002）。Cursor / Claude Code / Codex CLI 共用同一套设计→确认→编码流程。
 - A1 Prettier + lint-staged（pre-commit 只扫暂存文件）；A2 dependency-cruiser 禁循环依赖并强制 apps→packages；A4 `import type` 强制（`consistent-type-imports`）。
+
+### Changed
+
+- `BotDispatcher`：新增 `rejected` 结果（验签失败回 4xx）、可注入任务调度器、handler 异常时回复通用失败文案（不外泄错误细节）；回复带 `replyTo`。
+- 机器人 handler 由「每条消息新建会话、无历史」改为按会话绑定并携带历史。
 
 ## [0.1.0] - 2026-09-19
 

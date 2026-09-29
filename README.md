@@ -54,11 +54,12 @@ deploy/             docker-compose / k8s
 ```bash
 pnpm typecheck   # 类型检查（提交前必须全绿）
 pnpm lint        # eslint
+pnpm test        # 单元测试（node:test）
 ```
 
 ## 机器人接入
 
-- 飞书：创建企业自建应用，事件订阅回调填 `https://<你的域名>/api/bots/feishu`，配置 `FEISHU_*` env
+- 飞书：创建企业自建应用并开启机器人能力，事件订阅回调填 `https://<你的域名>/api/bots/feishu`，订阅 `im.message.receive_v1`，配置 `FEISHU_*` env。私聊或群里 @机器人即可诊断，`/new` 开新会话。权限清单与联调步骤见 [docs/runbook/feishu-bot-setup.md](docs/runbook/feishu-bot-setup.md)
 - 企业微信：应用消息回调填 `https://<你的域名>/api/bots/wecom`，配置 `WECOM_*` env；群机器人推送用 `WeComWebhookPusher`
 
 ## 部署
