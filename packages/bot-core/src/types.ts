@@ -15,7 +15,9 @@ export interface BotWebhookRequest {
 export type BotWebhookResult =
   | { kind: "challenge"; response: unknown; contentType?: string }
   | { kind: "event"; event: UnifiedBotEvent }
-  | { kind: "ignored"; reason: string };
+  | { kind: "ignored"; reason: string }
+  /** Authenticity check failed (bad token / signature / undecryptable). Routes answer 4xx. */
+  | { kind: "rejected"; reason: string; status: number };
 
 /**
  * The bot-layer abstraction. One adapter per platform; adding DingTalk etc.
@@ -33,3 +35,21 @@ export interface BotAdapter {
 export type BotEventHandler = (
   event: UnifiedBotEvent,
 ) => Promise<{ replyText: string; sessionId?: string }>;
+
+/**
+ * Schedules the async "run agent + reply" work after the webhook has been acked.
+ * Web routes pass Next.js `after()`; the default is fire-and-forget.
+ */
+export type BotTaskScheduler = (task: () => Promise<void>) => void;
+
+/** Read a header case-insensitively (Node/fetch headers are lower-cased, mocks may not be). */
+export function headerValue(
+  headers: BotWebhookRequest["headers"],
+  name: string,
+): string | undefined {
+  const lower = name.toLowerCase();
+  for (const [k, v] of Object.entries(headers)) {
+    if (k.toLowerCase() === lower) return Array.isArray(v) ? v[0] : v;
+  }
+  return undefined;
+}

@@ -65,6 +65,15 @@ CREATE TABLE IF NOT EXISTS knowledge_chunks (
   embedding VECTOR
 );
 CREATE INDEX IF NOT EXISTS idx_chunks_kb ON knowledge_chunks(knowledge_base_id);
+
+-- IM bot conversation (e.g. feishu p2p chat / group+user) -> current chat session
+CREATE TABLE IF NOT EXISTS bot_conversations (
+  conversation_key TEXT PRIMARY KEY,
+  platform TEXT NOT NULL,
+  session_id TEXT NOT NULL REFERENCES chat_sessions(id) ON DELETE CASCADE,
+  created_at BIGINT NOT NULL,
+  updated_at BIGINT NOT NULL
+);
 `;
 
 export async function getDb(dataDir?: string): Promise<PGlite> {
