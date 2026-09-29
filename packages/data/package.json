@@ -1,0 +1,23 @@
+{
+  "name": "@fde/data",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "latest",
+    "@electric-sql/pglite-pgvector": "^0.0.9",
+    "@fde/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "typescript": "^5.6.0"
+  }
+}

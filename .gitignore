@@ -30,9 +30,11 @@ out/
 # doctor 环境自检标记（本机状态，不入库）
 .env-check.ok
 
-# Local data (embedded PGlite db, uploads)
+# Local data (embedded PGlite db, uploads).
+# 只忽略仓库根的 data/。未加斜杠的 data/ 会匹配任意目录，
+# 把 packages/data 整个包排除在提交之外。
 .data/
-data/
+/data/
 uploads/
 
 # Legacy template junk
