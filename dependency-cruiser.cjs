@@ -16,9 +16,10 @@ module.exports = {
     {
       name: "no-circular",
       severity: "error",
-      comment: "禁止循环依赖（A2）",
+      comment:
+        "禁止循环依赖（A2）。type-only 边（import type）编译后会被抹掉、不产生运行时循环，故排除。",
       from: {},
-      to: { circular: true },
+      to: { circular: true, dependencyTypesNot: ["type-only"] },
     },
     {
       name: "packages-must-not-import-apps",

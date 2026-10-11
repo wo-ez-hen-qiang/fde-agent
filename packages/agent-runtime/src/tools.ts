@@ -1,6 +1,7 @@
 import { tool } from "@openai/agents";
 import { z } from "zod";
 import { KnowledgeStore, embeddingClientFromEnv } from "@fde/data";
+import { agentLog } from "./log.js";
 
 let store: KnowledgeStore | null = null;
 
@@ -25,7 +26,20 @@ export const knowledgeSearchTool = tool({
     topK: z.number().int().min(1).max(10).default(5).describe("返回条数"),
   }),
   execute: async ({ knowledgeBaseId, query, topK }) => {
+    console.log(
+      `[PRESALES-DEMO] step 10: tool search_knowledge_base kb=${knowledgeBaseId} topK=${topK} query=${query.slice(0, 120)}`,
+    );
+    agentLog("kb:search", `tool 检索 topK=${topK} queryLen=${query.length}`);
     const hits = await getStore().search(knowledgeBaseId, query, topK);
+    console.log(
+      `[PRESALES-DEMO] step 10b: tool search_knowledge_base hits=${hits.length}` +
+        (hits[0] ? ` topScore=${hits[0].score.toFixed(4)} doc=${hits[0].documentTitle}` : ""),
+    );
+    agentLog(
+      "kb:search",
+      `tool 命中 ${hits.length} 条` +
+        (hits[0] ? `，最高分 ${hits[0].score.toFixed(2)}（${hits[0].documentTitle}）` : ""),
+    );
     return hits.map((h) => ({
       document: h.documentTitle,
       excerpt: h.chunk.content,

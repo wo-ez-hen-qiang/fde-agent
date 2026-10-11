@@ -124,8 +124,9 @@ export function resolveProviderConfig(
 
 export function isProviderEnabled(provider: ProviderId, env: EnvLike = process.env): boolean {
   if (provider === "cursor") {
-    // cursor traffic goes through cursor-cli; enabled when a binary is configured.
-    return Boolean(env.FDE_CLI_CURSOR_BIN);
+    // Cursor is not an HTTP catalog provider; traffic goes through cursor-cli.
+    // Keep the ProviderId for alias parse errors, but never report it as enabled here.
+    return false;
   }
   return Boolean(env[PROVIDER_ENV[provider].apiKey]);
 }

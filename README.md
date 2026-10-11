@@ -25,9 +25,9 @@ pnpm install
 pnpm dev:web
 
 # 5. CLI
-pnpm dev:cli -- models          # 查看模型流量
-pnpm dev:cli -- chat "你好"      # 对话
-pnpm dev:cli -- backend list    # 查看后端
+pnpm dev:cli models          # 查看模型流量
+pnpm dev:cli chat "你好"      # 对话
+pnpm dev:cli backend list    # 查看后端
 ```
 
 ## 仓库结构
@@ -37,7 +37,7 @@ apps/web            Next.js 全栈（页面 + /api/* + bot webhook）
 apps/cli            fde-agent-cli
 packages/shared     领域类型（唯一类型契约来源）
 packages/model-gateway  模型别名注册 + LanguageModel 解析
-packages/agent-runtime  OpenAI Agents SDK 封装：Agent / Native Tool / MCP / 流式 Runner
+packages/agent-runtime  OpenAI Agents SDK 封装：Agent / Native Tool / MCP / 流式 Runner；后端 api / claude-cli / codex-cli / cursor-cli
 packages/data       PGlite：聊天历史 + 知识库 + 向量检索
 packages/bot-core   机器人抽象 + 飞书/企微适配器
 AGENTS.md            开发规范正文（Cursor / Claude Code / Codex 共用）
@@ -54,16 +54,16 @@ deploy/             docker-compose / k8s
 ```bash
 pnpm typecheck   # 类型检查（提交前必须全绿）
 pnpm lint        # eslint
-pnpm test        # 单元测试（node:test）
 ```
 
 ## 机器人接入
 
-- 飞书：创建企业自建应用并开启机器人能力，事件订阅回调填 `https://<你的域名>/api/bots/feishu`，订阅 `im.message.receive_v1`，配置 `FEISHU_*` env。私聊或群里 @机器人即可诊断，`/new` 开新会话。权限清单与联调步骤见 [docs/runbook/feishu-bot-setup.md](docs/runbook/feishu-bot-setup.md)
+- 飞书：创建企业自建应用，事件订阅回调填 `https://<你的域名>/api/bots/feishu`，配置 `FEISHU_*` env
 - 企业微信：应用消息回调填 `https://<你的域名>/api/bots/wecom`，配置 `WECOM_*` env；群机器人推送用 `WeComWebhookPusher`
 
 ## 部署
 
 - 本地/服务器：`pnpm install && pnpm build && pnpm --filter @fde/web start`
-- **一键重建**：`pnpm rebuild`（install → clean → build；加 `-- --restart` 构建后自动重启生产服务并自检）
+- **一键重建**：`pnpm run rebuild`（install → clean → build；加 `--restart` 构建后自动重启生产服务并自检）
+  - 必须带 `run`：`pnpm rebuild` 是 pnpm 内置命令（重建 node_modules 依赖），不会跑本仓库脚本。同理 `pnpm run rebuild --restart` 而非 `-- --restart`（pnpm 不会吞掉 `--`，会把 `--` 一起传进脚本）
 - docker-compose / k8s：见 `deploy/`

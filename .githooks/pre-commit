@@ -17,7 +17,8 @@ if [ "$PKG_VER" != "$FILE_VER" ]; then
   echo "[gate] 失败：VERSION($FILE_VER) 与 package.json($PKG_VER) 不一致" >&2
   exit 1
 fi
-CHANGELOG_VER=$(grep -oP '(?<=## \[)[0-9]+\.[0-9]+\.[0-9]+(?=\])' CHANGELOG.md 2>/dev/null | head -1 || true)
+# 用 sed 而非 grep -oP：macOS 自带 BSD grep 不支持 -P，会让本关永远失败
+CHANGELOG_VER=$(sed -n 's/^## \[\([0-9][0-9.]*\)\].*/\1/p' CHANGELOG.md 2>/dev/null | head -1 || true)
 if [ -z "$CHANGELOG_VER" ]; then
   echo "[gate] 失败：CHANGELOG.md 缺少版本小节（格式：## [x.y.z] - yyyy-mm-dd）" >&2
   exit 1

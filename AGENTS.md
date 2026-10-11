@@ -12,7 +12,7 @@
 
 ```
 Task Progress:
-- [ ] 0. 环境自检：运行 pnpm doctor（见下）
+- [ ] 0. 环境自检：运行 pnpm run doctor（见下）
 - [ ] 1. 设计：写设计文档到 docs/design/yyyy-mm-dd-<主题>.md
 - [ ] 2. 确认：向伊泽瑞尔呈现文档要点，获得明确确认
 - [ ] 3. 编码：按文档实现，不偏离已确认的架构
@@ -20,9 +20,9 @@ Task Progress:
 - [ ] 5. 验收：typecheck + lint 全绿，向伊泽瑞尔汇报冒烟结果
 ```
 
-**Step 0：环境自检（每次会话首次载入时执行）**。运行 `pnpm doctor`：
+**Step 0：环境自检（每次会话首次载入时执行）**。运行 `pnpm run doctor`（两个坑：① 必须带 `run`，`pnpm doctor` 会命中 pnpm 内置命令而不跑本仓库脚本；② pnpm 不像 npm 那样吞掉 `--`，强制重跑写 `pnpm run doctor --force`，写成 `-- --force` 会把 `--` 当参数传进去、静默跳过）：
 - 输出「已通过（日期），跳过」→ 直接继续，不要重复检查。
-- 有 ❌ 项 → 按输出提示修复（详细指引在 `docs/runbook/dev-environment-setup.md`），修复后 `pnpm doctor -- --force` 复跑，全绿再开始干活。
+- 有 ❌ 项 → 按输出提示修复（详细指引在 `docs/runbook/dev-environment-setup.md`），修复后 `pnpm run doctor --force` 复跑，全绿再开始干活。
 
 **Step 1：设计文档**。包含：目标/非目标、方案对比与选型理由、模块职责与接口（关键类型签名）、数据模型变更、时序图（复杂流程用 mermaid）、对现有代码的影响面。文档分类与命名规范见 [docs/README.md](docs/README.md)（设计文档 `docs/design/YYYY-MM-DD-<主题>.md`；难撤销的选型另补 `docs/adr/NNNN-<标题>.md`）。**文档顶部必须标注作者，AI 参与的要写明模型名**，如 `作者：伊泽瑞尔 + AI (kimi-k3)`。
 
@@ -36,7 +36,7 @@ Task Progress:
 - **UI 交互改动：必须用 Playwright 实际测试交互**（真实点击/输入/断言界面反馈，spec 放 `apps/web/e2e/`），禁止只构建通过或只看截图。
 - 禁止只编译通过就宣布完成。
 
-**Step 5：验收**。运行 `pnpm typecheck && pnpm lint`，必须全绿；在回复中汇报冒烟测试的实际输出。低内存机器（可用内存 < 2GB）不要跑 `next build` / `pnpm rebuild`，用 `pnpm typecheck && pnpm lint` 验收即可，构建交给 GitHub Actions。
+**Step 5：验收**。运行 `pnpm typecheck && pnpm lint`，必须全绿；在回复中汇报冒烟测试的实际输出。低内存机器（可用内存 < 2GB）不要跑 `next build` / `pnpm run rebuild`，用 `pnpm typecheck && pnpm lint` 验收即可，构建交给 GitHub Actions。
 
 ## 前端改动的补充：交互规格
 
@@ -63,6 +63,7 @@ Task Progress:
 ## 技术栈速查
 
 Next.js 15 App Router + React 19 + Tailwind v4（apps/web）；`@openai/agents` + `aisdk()` 桥接（packages/agent-runtime）；PGlite + pgvector（packages/data）；AI SDK providers（packages/model-gateway）。新增依赖前先查是否已有包提供该能力。
+
 
 ## 工具入口对照
 

@@ -3,3 +3,8 @@ export * from "./diagnosis.js";
 export * from "./knowledge.js";
 export * from "./provider.js";
 export * from "./bot.js";
+export * from "./backend.js";
+export * from "./scenario.js";
+export * from "./presales.js";
+export * from "./presales-test-set.js";
+export * from "./log.js";

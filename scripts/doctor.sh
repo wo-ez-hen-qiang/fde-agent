@@ -5,7 +5,7 @@
 #   scripts/doctor.sh            # 标记有效则跳过，否则全量检查
 #   scripts/doctor.sh --force    # 忽略标记，强制全量检查
 #
-# 检查项: Node>=22 / pnpm / 依赖已安装 / .env 含至少一个模型 key / git 门禁已挂载
+# 检查项: Node>=22 / pnpm / 依赖已安装 / API 或 CLI 模型后端 / git 门禁已挂载
 # 全部通过写标记 .env-check.ok（gitignored），后续运行秒过。
 set -u
 
@@ -23,7 +23,7 @@ if [ "$FORCE" = "0" ] && [ -f "$MARKER" ]; then
   if [ "$MARK_NODE" = "$(node -v 2>/dev/null || echo none)" ] \
      && [ "$MARK_PNPM" = "$(pnpm -v 2>/dev/null || echo none)" ] \
      && [ -d node_modules ] && [ -f .env ]; then
-    echo "[doctor] 环境检查已通过（$MARK_DATE），跳过。强制重跑：pnpm doctor -- --force"
+    echo "[doctor] 环境检查已通过（$MARK_DATE），跳过。强制重跑：pnpm run doctor --force"
     exit 0
   fi
   echo "[doctor] 环境有变化，重新检查..."
@@ -50,7 +50,7 @@ fi
 if command -v pnpm >/dev/null 2>&1; then
   ok "pnpm $(pnpm -v)"
 else
-  bad "未找到 pnpm：corepack enable && corepack prepare pnpm@10 --activate"
+  bad "未找到 pnpm：npm i -g pnpm@10.0.0（Node 26 无 corepack），见 docs/runbook/dev-environment-setup.md"
 fi
 
 # 3. 依赖已安装
@@ -60,15 +60,20 @@ else
   bad "依赖未安装：pnpm install"
 fi
 
-# 4. .env 存在且至少一个模型 key 非空
-if [ -f .env ]; then
-  if grep -qE "^(GLM|DEEPSEEK|OPENAI|ANTHROPIC)_API_KEY=.+" .env; then
-    ok ".env 已配置模型 key"
-  else
-    bad ".env 没有任何模型 API key（至少配一个，参照 .env.example）"
-  fi
+# 4. 至少一个模型后端可用：API key、Claude CLI 或 Codex CLI
+MODEL_BACKEND=""
+if [ -f .env ] && grep -qE "^(GLM|DEEPSEEK|OPENAI|ANTHROPIC)_API_KEY=.+" .env; then
+  MODEL_BACKEND="API key"
+elif command -v claude >/dev/null 2>&1 && claude auth status >/dev/null 2>&1; then
+  MODEL_BACKEND="Claude CLI"
+elif command -v codex >/dev/null 2>&1 && codex login status >/dev/null 2>&1; then
+  MODEL_BACKEND="Codex CLI"
+fi
+
+if [ -n "$MODEL_BACKEND" ]; then
+  ok "模型后端可用：$MODEL_BACKEND"
 else
-  bad "缺少 .env：cp .env.example .env 并填入 API key"
+  bad "没有可用模型后端：请配置 .env API key，或登录 Claude/Codex CLI"
 fi
 
 # 5. git 门禁已挂载
@@ -80,7 +85,7 @@ fi
 
 if [ "$fail" = "1" ]; then
   echo
-  echo "[doctor] 存在未通过项，按提示修复后复跑：pnpm doctor -- --force"
+  echo "[doctor] 存在未通过项，按提示修复后复跑：pnpm run doctor --force"
   exit 1
 fi
 

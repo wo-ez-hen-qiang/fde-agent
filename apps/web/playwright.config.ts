@@ -11,5 +11,7 @@ export default defineConfig({
   use: {
     baseURL: process.env.FDE_E2E_BASE_URL ?? "http://localhost:3000",
     headless: true,
+    // 本机未下好 Playwright Chromium 时可用：PW_CHANNEL=chrome
+    ...(process.env.PW_CHANNEL ? { channel: process.env.PW_CHANNEL } : {}),
   },
 });
