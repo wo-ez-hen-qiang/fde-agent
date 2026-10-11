@@ -47,7 +47,7 @@ export class ModelGateway {
         })(model);
       case "cursor":
         throw new Error(
-          'Provider "cursor" is carried by cursor-cli; use @fde/cli backends instead of the HTTP gateway',
+          'Provider "cursor" is carried by the cursor-cli backend in @fde/agent-runtime; do not resolve it through the HTTP gateway',
         );
       default: {
         const exhaustive: never = provider;

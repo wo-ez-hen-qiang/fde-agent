@@ -1,4 +1,5 @@
 import { chatStore } from "@/lib/server";
+import type { ChatSession } from "@fde/shared";
 
 export const runtime = "nodejs";
 
@@ -13,7 +14,12 @@ export async function GET(_req: Request, ctx: Ctx) {
   const session = await store.getSession(id);
   if (!session) return Response.json({ error: "session not found" }, { status: 404 });
   const messages = await store.listMessages(id);
-  return Response.json({ session, messages });
+  return Response.json({ session: publicSession(session), messages });
+}
+
+function publicSession(session: ChatSession): Omit<ChatSession, "providerSessionId"> {
+  const { providerSessionId: _private, ...safe } = session;
+  return safe;
 }
 
 /** DELETE /api/sessions/[id] */

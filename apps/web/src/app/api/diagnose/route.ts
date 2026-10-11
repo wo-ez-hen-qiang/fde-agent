@@ -1,6 +1,5 @@
-import type { DiagnosisResult } from "@fde/shared";
-import { buildDiagnosisAgent, runDiagnosis } from "@fde/agent-runtime";
-import { chatStore, mcpManager } from "@/lib/server";
+import type { AgentBackendId } from "@fde/shared";
+import { runScenarioRoute } from "@/lib/scenario-route";
 
 export const runtime = "nodejs";
 
@@ -9,64 +8,34 @@ interface DiagnoseBody {
   knowledgeBaseId?: string;
   model?: string;
   sessionId?: string;
+  backend?: AgentBackendId;
 }
 
-/** POST /api/diagnose - structured ticket diagnosis with citations. */
+/**
+ * POST /api/diagnose - 结构化工单诊断（带引用）。
+ * 实现已泛化到 /api/scenario；这里保留原路由与响应体，既有调用方与 e2e 不受影响。
+ */
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as DiagnoseBody;
   if (!body.ticket?.trim()) {
     return Response.json({ error: "ticket is required" }, { status: 400 });
   }
-  if (!body.knowledgeBaseId) {
-    return Response.json({ error: "knowledgeBaseId is required for diagnosis" }, { status: 400 });
-  }
 
-  try {
-    const agent = await buildDiagnosisAgent({
-      modelAlias: body.model,
-      knowledgeBaseId: body.knowledgeBaseId,
-      mcpManager: mcpManager(),
-    });
-    const { output, references } = await runDiagnosis({
-      agent,
-      input: body.ticket,
-      knowledgeBaseId: body.knowledgeBaseId,
-    });
+  const outcome = await runScenarioRoute({
+    scenario: "diagnosis",
+    input: body.ticket,
+    sessionId: body.sessionId,
+    knowledgeBaseId: body.knowledgeBaseId,
+    model: body.model,
+    backend: body.backend,
+    signal: req.signal,
+  });
 
-    const result: DiagnosisResult = {
-      summary: output.summary,
-      location: output.location,
-      rootCause: output.rootCause,
-      solution: output.solution,
-      prevention: output.prevention,
-      confidence: output.confidence,
-      references,
-      createdAt: Date.now(),
-    };
-
-    // persist into the session as a markdown message so history shows it
-    if (body.sessionId) {
-      const md = [
-        `**诊断结论**：${output.summary}`,
-        `**问题定位**：${output.location}`,
-        `**根因分析**：${output.rootCause}`,
-        `**解决方案**：${output.solution}`,
-        `**预防措施**：${output.prevention}`,
-      ].join("\n\n");
-      await chatStore().appendMessage({
-        sessionId: body.sessionId,
-        role: "assistant",
-        content: md,
-        model: body.model,
-        knowledgeBaseId: body.knowledgeBaseId,
-      });
-    }
-
-    return Response.json({ diagnosis: result });
-  } catch (err) {
-    return Response.json(
-      { error: err instanceof Error ? err.message : String(err) },
-      { status: 500 },
-    );
-  }
+  return outcome.ok
+    ? Response.json({
+        diagnosis: outcome.result,
+        sessionId: outcome.sessionId,
+        logs: outcome.logs,
+      })
+    : Response.json({ error: outcome.error, logs: outcome.logs }, { status: outcome.status });
 }

@@ -1,7 +1,7 @@
 import { run } from "@openai/agents";
 import type { Agent } from "@openai/agents";
 import type { ChatStreamEvent, DiagnosisReference } from "@fde/shared";
-import type { DiagnosisOutput } from "./agents.js";
+import type { DiagnosisOutput } from "./scenarios/index.js";
 
 /**
  * Agent is invariant in its output-type parameter (the instructions callback
@@ -19,11 +19,18 @@ export interface RunChatOptions {
 }
 
 function buildInput(opts: RunChatOptions): string {
-  if (!opts.history?.length) return opts.input;
+  if (!opts.history?.length) {
+    console.log(`[PRESALES-DEMO] step 9: buildInput no-history inputLen=${opts.input.length}`);
+    return opts.input;
+  }
   const lines = opts.history
     .slice(-20)
     .map((m) => `${m.role === "user" ? "用户" : "助手"}: ${m.content}`);
-  return `以下是历史对话：\n${lines.join("\n")}\n\n用户: ${opts.input}`;
+  const built = `以下是历史对话：\n${lines.join("\n")}\n\n用户: ${opts.input}`;
+  console.log(
+    `[PRESALES-DEMO] step 9: buildInput historyTurns=${opts.history.length} used=${Math.min(opts.history.length, 20)} builtLen=${built.length}`,
+  );
+  return built;
 }
 
 /**
@@ -80,18 +87,27 @@ export async function* streamChat(opts: RunChatOptions): AsyncGenerator<ChatStre
   }
 }
 
-export interface RunDiagnosisOptions extends RunChatOptions {
+export interface RunScenarioOptions extends RunChatOptions {
   knowledgeBaseId: string;
+  /** 场景名，仅用于错误文案。 */
+  label?: string;
 }
 
-/** Non-streaming structured diagnosis; returns output + citations. */
-export async function runDiagnosis(
-  opts: RunDiagnosisOptions,
-): Promise<{ output: DiagnosisOutput; references: DiagnosisReference[] }> {
-  const result = await run(opts.agent, buildInput(opts));
-  const output = result.finalOutput as DiagnosisOutput | undefined;
+/** Non-streaming structured scenario run; returns raw output + citations. */
+export async function runStructured(
+  opts: RunScenarioOptions,
+): Promise<{ output: unknown; references: DiagnosisReference[] }> {
+  const prompt = buildInput(opts);
+  console.log(
+    `[PRESALES-DEMO] step 9b: runStructured calling agents.run label=${opts.label ?? ""} kb=${opts.knowledgeBaseId} promptLen=${prompt.length}`,
+  );
+  const result = await run(opts.agent, prompt);
+  const output = result.finalOutput as unknown;
+  console.log(
+    `[PRESALES-DEMO] step 11: runStructured got finalOutput type=${typeof output} newItems=${result.newItems.length}`,
+  );
   if (!output) {
-    throw new Error("Diagnosis agent produced no structured output");
+    throw new Error(`${opts.label ?? "场景"} 未产生结构化输出`);
   }
   const references: DiagnosisReference[] = [];
   for (const item of result.newItems) {
@@ -113,7 +129,16 @@ export async function runDiagnosis(
       }
     }
   }
+  console.log(`[PRESALES-DEMO] step 11b: runStructured references=${references.length}`);
   return { output, references };
+}
+
+/** @deprecated 用 runStructured；保留别名以兼容既有调用方。 */
+export async function runDiagnosis(
+  opts: RunScenarioOptions,
+): Promise<{ output: DiagnosisOutput; references: DiagnosisReference[] }> {
+  const { output, references } = await runStructured({ ...opts, label: opts.label ?? "诊断" });
+  return { output: output as DiagnosisOutput, references };
 }
 
 function truncate(s: string, max: number): string {

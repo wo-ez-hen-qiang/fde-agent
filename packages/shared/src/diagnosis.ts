@@ -14,6 +14,8 @@ export interface Ticket {
 
 /** Structured diagnosis output rendered as a card in the chat UI. */
 export interface DiagnosisResult {
+  /** 判别字段，用于 ScenarioResult 收窄。 */
+  scenario: "diagnosis";
   ticketId?: string;
   summary: string;
   /** 问题定位 */

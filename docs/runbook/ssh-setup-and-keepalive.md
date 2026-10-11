@@ -102,4 +102,4 @@ IP 变了又没做绑定的话，更新 Windows hosts 里那一行即可。
 | 重连后任务没了 | 是否进了 tmux（`tmux ls`）；`.bashrc` 自动 attach 是否生效 |
 | Cursor 连不上 | 看 Output → Remote-SSH 日志；先纯终端 `ssh fde-home` 验证通不通 |
 | 浏览器访问 fde.local 不通（ping/curl 通） | 浏览器走了系统代理：Clash「代理绕过」加 `;fde.local;192.168.187.129` 并重开开关（见第 5 节） |
-| 浏览器/服务都不通（curl 也不通） | 服务进程是否活着：本机 `curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/`；挂了用 `pnpm rebuild -- --restart` 或 `pnpm --filter @fde/web start` 拉起 |
+| 浏览器/服务都不通（curl 也不通） | 服务进程是否活着：本机 `curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/`；挂了用 `pnpm run rebuild --restart` 或 `pnpm --filter @fde/web start` 拉起 |

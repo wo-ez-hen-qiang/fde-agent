@@ -10,6 +10,8 @@
   --primary: #3370ff;
   --bubble-user: #e8f1ff;
   --danger: #f53f3f;
+  --success: #16835b;
+  --warning: #b56908;
   --hover: rgba(127, 127, 127, 0.12);
 }
 
@@ -23,6 +25,8 @@
     --primary: #4c88ff;
     --bubble-user: #26374d;
     --danger: #f56565;
+    --success: #48b98a;
+    --warning: #e5a84b;
     --hover: rgba(255, 255, 255, 0.08);
   }
 }
@@ -38,6 +42,8 @@
   --color-primary: var(--primary);
   --color-bubble-user: var(--bubble-user);
   --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --color-hover: var(--hover);
 }
 

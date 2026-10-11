@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>智能体 0–1 · 面试演示</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #14202e;
+        --mist: #e8eef3;
+        --paper: #f7f9fb;
+        --card: #ffffff;
+        --line: #d3dde6;
+        --muted: #5d6d7e;
+        --copper: #b85c38;
+        --copper-soft: #f4e6df;
+        --deep: #101820;
+        --ok: #1f6b4a;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; background: #0b1218; color: var(--ink); }
+      body {
+        font-family: "Noto Sans SC", sans-serif;
+        overflow: hidden;
+      }
+      button, a { font-family: inherit; }
+      .deck { height: 100%; position: relative; }
+      .slide {
+        display: none;
+        height: 100%;
+        padding: 4.2vh 6vw 9vh;
+        background: var(--paper);
+        color: var(--ink);
+      }
+      .slide.active { display: flex; flex-direction: column; }
+      .slide.deep { background: var(--deep); color: #f4f7fa; }
+      .kicker {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--copper);
+        margin: 0 0 1.2vh;
+      }
+      .deep .kicker { color: #e7b39a; }
+      h1 {
+        font-family: "Noto Serif SC", serif;
+        font-weight: 700;
+        font-size: clamp(36px, 4.6vw, 64px);
+        line-height: 1.18;
+        margin: 0 0 1.6vh;
+        letter-spacing: -0.02em;
+      }
+      h2 {
+        font-family: "Noto Serif SC", serif;
+        font-weight: 700;
+        font-size: clamp(28px, 3.2vw, 44px);
+        line-height: 1.22;
+        margin: 0 0 2vh;
+      }
+      .lead { font-size: clamp(18px, 1.6vw, 24px); line-height: 1.55; max-width: 46em; color: #314050; }
+      .deep .lead { color: #d5dee6; }
+      .grid { display: grid; gap: 14px; margin-top: 2vh; }
+      .g3 { grid-template-columns: repeat(3, 1fr); }
+      .g2 { grid-template-columns: 1.1fr 0.9fr; }
+      .g4 { grid-template-columns: repeat(4, 1fr); }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 16px 18px 18px;
+      }
+      .deep .card { background: #1a2633; border-color: #2c3c4d; color: #f4f7fa; }
+      .card h3 { margin: 0 0 6px; font-size: 18px; font-weight: 700; }
+      .card p, .card li { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; }
+      .deep .card p, .deep .card li { color: #c5d0da; }
+      .stamp {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 1.5px solid var(--copper);
+        color: var(--copper);
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        background: var(--copper-soft);
+      }
+      .deep .stamp { background: transparent; color: #e7b39a; border-color: #e7b39a; }
+      .flow { display: flex; gap: 10px; align-items: stretch; margin-top: 2vh; flex-wrap: wrap; }
+      .step {
+        flex: 1;
+        min-width: 140px;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 14px 14px 16px;
+        position: relative;
+      }
+      .step b { display: block; font-size: 16px; margin-bottom: 4px; }
+      .step span { color: var(--muted); font-size: 14px; line-height: 1.45; display: block; }
+      .step.human { border-color: var(--copper); box-shadow: inset 0 0 0 1px var(--copper); }
+      .arrow { align-self: center; color: var(--copper); font-size: 22px; }
+      ul.clean { margin: 8px 0 0; padding-left: 1.1em; }
+      ul.clean li { margin: 6px 0; }
+      table { width: 100%; border-collapse: collapse; font-size: 16px; margin-top: 1vh; }
+      th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { color: var(--muted); font-weight: 500; font-size: 13px; }
+      .qa-q { font-family: "Noto Serif SC", serif; font-size: clamp(26px, 2.8vw, 38px); margin: 0 0 1.4vh; }
+      .say {
+        background: var(--card);
+        border-left: 4px solid var(--copper);
+        padding: 14px 16px;
+        border-radius: 0 12px 12px 0;
+        font-size: 18px;
+        line-height: 1.55;
+      }
+      .avoid { margin-top: 12px; color: var(--muted); font-size: 15px; }
+      .foot {
+        position: fixed;
+        left: 0; right: 0; bottom: 0;
+        height: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+        background: rgba(16, 24, 32, 0.92);
+        color: #d5dee6;
+        font-size: 13px;
+        z-index: 5;
+      }
+      .foot button {
+        background: transparent;
+        color: inherit;
+        border: 1px solid #3d4e60;
+        border-radius: 8px;
+        padding: 6px 10px;
+        cursor: pointer;
+      }
+      .foot button:focus-visible, .notes:focus-visible { outline: 2px solid var(--copper); outline-offset: 2px; }
+      .bar { position: fixed; top: 0; left: 0; height: 3px; background: var(--copper); z-index: 6; }
+      .notes {
+        display: none;
+        position: fixed;
+        right: 16px;
+        bottom: 64px;
+        width: min(420px, 36vw);
+        max-height: 42vh;
+        overflow: auto;
+        background: #fff;
+        color: var(--ink);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 14px 16px;
+        font-size: 14px;
+        line-height: 1.55;
+        z-index: 7;
+        box-shadow: 0 12px 40px rgba(0,0,0,.18);
+      }
+      .notes.show { display: block; }
+      .notes b { display: block; margin-bottom: 6px; color: var(--copper); font-size: 12px; letter-spacing: 0.06em; }
+      .arch {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 14px;
+        line-height: 1.65;
+        background: #101820;
+        color: #e7eef4;
+        border-radius: 14px;
+        padding: 18px 20px;
+        white-space: pre;
+      }
+      .muted { color: var(--muted); }
+      .tag {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 12px;
+        background: var(--mist);
+        border-radius: 6px;
+        padding: 2px 6px;
+      }
+      @media (max-width: 900px) {
+        .g3, .g2, .g4 { grid-template-columns: 1fr; }
+        .slide { padding: 24px 18px 80px; overflow: auto; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * { scroll-behavior: auto !important; transition: none !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bar" id="bar"></div>
+    <main class="deck" id="deck">
+
+      <section class="slide deep active" data-notes="开场不要先讲技术栈。先问对方：你们想让 AI 替代哪一段岗位流程？停两秒，再说我做的是把一段流程做成可运行的智能体，而不是再包一层聊天。控制在 40 秒。">
+        <p class="kicker">Interview · Agent 0→1</p>
+        <h1>企业要的不是另一个聊天框。<br />要的是一段岗位流程被做成智能体。</h1>
+        <p class="lead">我独立完成过一条从 0 到 1 的路径：定场景、写设计、编码、接到知识库和办公软件、自己验收。下面用一个真实项目说明我能交付什么，以及我怎么回答你们的追问。</p>
+        <p style="margin-top:28px"><span class="stamp">人确认关键节点 · AI 写草稿</span></p>
+      </section>
+
+      <section class="slide" data-notes="点名项目名和三个入口即可。强调「同一套脑子，多种门」。不要展开 monorepo。">
+        <p class="kicker">01 · 交付物</p>
+        <h2>我做成的东西：fde-agent</h2>
+        <p class="lead">给一线交付人员用的智能体工作台。知识库提供依据，人确认关键稿，模型可以换，本地也能跑。</p>
+        <div class="grid g3">
+          <article class="card"><h3>网页</h3><p>会话、流式回答、售前表单、方案卡、底部运行日志。</p></article>
+          <article class="card"><h3>命令行</h3><p>同一套能力进终端，方便实施和排障。</p></article>
+          <article class="card"><h3>飞书 / 企微</h3><p>群里或应用里收消息，走同一套诊断或问答，再把文字发回去。</p></article>
+        </div>
+      </section>
+
+      <section class="slide" data-notes="这是主菜。按三步讲，手指点铜框那一步：AI 不能直接出终稿。六段名称可以报：需求理解、行业机会、推荐方案、Demo 范围、交付风险、下一步要客户补的信息。">
+        <p class="kicker">02 · 一个能演示的闭环</p>
+        <h2>售前方案：三步，中间必须人改</h2>
+        <div class="flow">
+          <div class="step"><b>表 A</b><span>客户名称、行业、痛点、场景。必填，前端先挡住空表。</span></div>
+          <div class="arrow">→</div>
+          <div class="step"><b>AI 画布</b><span>8 个方案字段的草稿，依据来自知识库。</span></div>
+          <div class="arrow">→</div>
+          <div class="step human"><b>人确认</b><span>交付人员改完全部字段，再放行。</span></div>
+          <div class="arrow">→</div>
+          <div class="step"><b>6 段整案</b><span>需求理解、机会、方案、Demo、风险、待补信息。</span></div>
+        </div>
+        <p class="muted" style="margin-top:18px">关掉「模型反复追问」。缺信息在表单里收齐，不靠聊天碰运气。</p>
+      </section>
+
+      <section class="slide" data-notes="诊断用来说明第二个场景，证明不是写死一个流程。引用是面试官关心的「有没有依据」。">
+        <p class="kicker">03 · 第二个场景</p>
+        <h2>工单诊断：有结构，有引用</h2>
+        <div class="grid g2">
+          <article class="card">
+            <h3>输入</h3>
+            <p>一段工单描述。机器人里以「诊断：」开头即可走这条路径。</p>
+            <h3 style="margin-top:14px">输出</h3>
+            <p>问题定位、根因、解决方案、预防措施、置信度，并带上知识库引用。</p>
+          </article>
+          <article class="card">
+            <h3>为什么要两个场景</h3>
+            <p>场景是可插拔的：聊天、诊断、售前共用会话和知识库，各自有提示词和输出格式。再加一个业务，是登记一份场景定义，不是重做产品。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="slide" data-notes="口述时用手指从左到右。强调数据默认在自己机器上。后端抽象用一句人话：上面只喊「回答」和「跑场景」，下面可以是云 API，也可以是本机已登录的 Claude 或 Cursor。">
+        <p class="kicker">04 · 架构（一张图讲完）</p>
+        <h2>一个进程里的工作台，模型通道可换</h2>
+        <div class="arch">人（网页 / 命令行 / 飞书企微）
+        │
+        ▼
+   接入层          同一套会话与知识库
+        │
+        ▼
+   智能体运行时     场景：聊天 · 诊断 · 售前
+        │
+        ├── 知识库检索（文档先切片、再向量）
+        └── 模型通道：云 API，或本机 Claude / Cursor CLI</div>
+        <p class="muted" style="margin-top:14px">日常开发通常只有 1 个 Web 进程。选本机 CLI 时，这一轮请求再临时拉起一个子进程，结束就退出。</p>
+      </section>
+
+      <section class="slide" data-notes="这四条是「判断力」不是功能清单。每条用「我曾排除什么」来说。例如 Cursor 用本机 CLI 而不是再引一套 SDK；售前不让模型追问。">
+        <p class="kicker">05 · 0→1 里我做过的判断</p>
+        <h2>四个我会在面试里展开的决定</h2>
+        <div class="grid g2">
+          <article class="card"><h3>先定人机边界</h3><p>售前终稿前必须有人改画布。AI 负责草稿和检索，不负责拍板。</p></article>
+          <article class="card"><h3>模型通道抽象</h3><p>业务代码不绑死一家。云 API 与本机订阅 CLI 同一接口。Cursor 走只读问答，避免机器人改文件。</p></article>
+          <article class="card"><h3>知识库按文档形态切</h3><p>普通文本按段落约 500 字；手册按标题切，表格尽量整块，避免把参数表拦腰截断。</p></article>
+          <article class="card"><h3>办公软件只做皮肤</h3><p>飞书、企微负责验签、解密、收发。脑子仍是同一套智能体。群聊默认要 @ 才回。</p></article>
+        </div>
+      </section>
+
+      <section class="slide" data-notes="RAG 是必问题。讲清三步：入库切片、提问时检索、答案里带引用。主动说幻觉：检索到的是证据，不是保证；售前用表单和人工确认把风险压在人身上。评测现状要诚实：目前是冒烟和真实调用，不是完整自动评测集。">
+        <p class="kicker">06 · 他们一定会问的 RAG</p>
+        <h2>依据从哪来，错了怎么查</h2>
+        <table>
+          <thead><tr><th>环节</th><th>做法</th><th>我怎么讲边界</th></tr></thead>
+          <tbody>
+            <tr><td>入库</td><td>文档切片后做向量，写入本地库</td><td>切片策略按文档类型选，不一种切法打天下</td></tr>
+            <tr><td>提问</td><td>先检索再交给模型；售前会用多条查询合并</td><td>检索不到就明确说证据不足</td></tr>
+            <tr><td>排障</td><td>关键路径打标签日志，网页底部可看</td><td>例如中文键被映射、检索命中几条，不用猜</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="slide" data-notes="把 AI coding 讲成方法，不要讲成「我让 AI 写完了」。强调人做确认和验收。门禁：类型检查、规范、提交前钩子。">
+        <p class="kicker">07 · 我怎么带 AI 写代码</p>
+        <h2>设计先写下来，你说可以，我才改代码</h2>
+        <div class="flow">
+          <div class="step"><b>设计</b><span>目标、不做什么、接口、影响面。</span></div>
+          <div class="arrow">→</div>
+          <div class="step human"><b>人确认</b><span>口径变了先改文档。</span></div>
+          <div class="arrow">→</div>
+          <div class="step"><b>编码</b><span>类型放共享包，密钥只走环境变量。</span></div>
+          <div class="arrow">→</div>
+          <div class="step"><b>真跑</b><span>调一次接口或点一次界面，再看类型检查。</span></div>
+        </div>
+        <p class="muted" style="margin-top:16px">Cursor、Claude Code、Codex 共用同一份规范。规范若各写一份，三天后就会漂。</p>
+      </section>
+
+      <section class="slide" data-notes="主动暴露边界，比被追问时圆场更加分。语速放慢。">
+        <p class="kicker">08 · 我不夸大的部分</p>
+        <h2>现在适合试点，还不是集团级中台</h2>
+        <div class="grid g3">
+          <article class="card"><h3>单机数据</h3><p>嵌入式数据库，零外部服务，方便私有化试用。多实例同时写会抢锁。上生产要换正式数据库。</p></article>
+          <article class="card"><h3>没有权限和计费</h3><p>面向内部交付人员。多租户、审计、配额是下一阶段，不是已经做好。</p></article>
+          <article class="card"><h3>评测还轻</h3><p>靠真实调用、类型和关键路径冒烟。上线前要补业务评测集和人工抽检。</p></article>
+        </div>
+      </section>
+
+      <section class="slide deep" data-notes="收束到对方公司。让他们选一个流程，不要答应「三个月做完全公司 AI」。问他们：哪一段重复劳动最痛、资料在哪、谁必须签字。">
+        <p class="kicker">09 · 如果加入贵司</p>
+        <h1>先选一条岗位流程，<br />90 天做出能演示的闭环。</h1>
+        <div class="grid g3">
+          <article class="card"><h3>前 2 周</h3><p>选场景，画人机边界：哪一步必须人工确认。摸清文档在哪。</p></article>
+          <article class="card"><h3>中间</h3><p>知识库、结构化输出、一个入口（网页或飞书）。每周给用人部门看一版真跑。</p></article>
+          <article class="card"><h3>收尾</h3><p>日志、失败样本、一份「不能做什么」清单。再决定要不要扩第二个场景。</p></article>
+        </div>
+      </section>
+
+      <section class="slide" data-notes="停在这里请对方提问。后面每页是备答，被问到再翻，不要主动念完。方向键继续。">
+        <p class="kicker">备答 · 不要主动念</p>
+        <h2>追问时翻后面几页</h2>
+        <div class="grid g2">
+          <article class="card"><h3>和扣子 / Dify / Coze 比</h3><p>它们是平台。我展示的是：选定一个岗位流程后，怎么把人机边界、检索、办公软件和验收做完。</p></article>
+          <article class="card"><h3>数据出不出公司</h3><p>库在本地。走云模型时，提示词会出网，这点必须先和安全说清楚。也可改走内网模型或本机 CLI。</p></article>
+          <article class="card"><h3>你写还是 AI 写</h3><p>判断、确认、验收是我。AI 加速实现。提交有类型和规范门禁，编译通过不算完成。</p></article>
+          <article class="card"><h3>失败例子</h3><p>模型曾把字段写成中文键，解析失败。后来做了键名归一，并在日志里打出映射了几项。</p></article>
+        </div>
+      </section>
+
+      <section class="slide" data-notes="短答，然后补一句：平台省集成，岗位流程仍要有人定义输入输出和确认点。">
+        <p class="kicker">备答</p>
+        <h2 class="qa-q">为什么不直接用现成智能体平台？</h2>
+        <p class="say">平台适合快速拼流程。我这份工作证明的是：当流程要嵌进你们的知识、确认权和办公软件时，我能从零把运行时、数据、入口和验收接起来，而不是只会拖拽节点。</p>
+        <p class="avoid">避免说「那些平台不行」。可以说「试点可以先用平台，核心流程我要能讲清数据怎么走」。</p>
+      </section>
+
+      <section class="slide" data-notes="安全问题分两层：库存哪、提示词出不出网。">
+        <p class="kicker">备答</p>
+        <h2 class="qa-q">客户资料会不会上传到公有云？</h2>
+        <p class="say">会话和知识库默认在我们自己的机器上。若选用云端模型，当次提示词会发到该供应商。上线前要定：内网模型、本机 CLI，还是允许出网。密钥只放环境变量，日志不打全文和密钥。</p>
+        <p class="avoid">不要承诺「绝对不出网」，除非对方指定内网模型并且你验证过。</p>
+      </section>
+
+      <section class="slide" data-notes="幻觉问题回到人机边界和引用。">
+        <p class="kicker">备答</p>
+        <h2 class="qa-q">模型胡说怎么办？</h2>
+        <p class="say">三层：检索不到就说证据不足；结构化输出对字段；关键稿必须人改完再进入下一步。售前的 6 段整案发生在画布确认之后。另外用日志看它检索到了什么、解析有没有改写字段。</p>
+        <p class="avoid">不要说「我们的模型不会幻觉」。</p>
+      </section>
+
+      <section class="slide" data-notes="成本问题：API 按 token；CLI 走订阅。没有做计费系统，这是实话。">
+        <p class="kicker">备答</p>
+        <h2 class="qa-q">成本怎么控？</h2>
+        <p class="say">云 API 按调用付费，本机 Claude / Cursor 走已有订阅。架构上可以按场景换通道：对内试用用订阅，对客户正式调用再用可审计的 API。我还没有做配额和账单，那是上生产前要补的。</p>
+      </section>
+
+      <section class="slide" data-notes="多用户问题承认缺口，并给出迁移路径：换 Postgres、加登录、会话按人隔离。">
+        <p class="kicker">备答</p>
+        <h2 class="qa-q">能不能给全公司用？</h2>
+        <p class="say">现在适合一个团队试点。数据层是嵌入式库，方便零依赖启动，不适合多实例并发写。要全公司用，我会换正式数据库、加登录和权限，机器人与网页继续共用同一套场景。这是迁移，不是推倒。</p>
+      </section>
+
+      <section class="slide" data-notes="岗位匹配。问对方编制是平台、应用还是业务分析，把你的角色说成「能把场景做完的人」，而不是纯研究。">
+        <p class="kicker">备答</p>
+        <h2 class="qa-q">你在团队里站哪一岗？</h2>
+        <p class="say">我能独立把一个场景从问题定义做到可演示：和业务定确认点、设计数据流、实现检索和入口、自己做冒烟。团队里我适合应用负责人或智能体工程师，旁边需要业务负责人口径，安全负责出网策略。我不把自己说成算法研究员。</p>
+      </section>
+
+      <section class="slide deep" data-notes="结束。把选择权交回去。留下联系方式口头说即可，片子上不必放私人电话，除非你想改这一页。">
+        <p class="kicker">收束</p>
+        <h1>挑一条你们最痛的流程。<br />我按「人确认、AI 草稿、知识库给依据」做一版给你们看。</h1>
+        <p class="lead">今天这个项目就是这样长出来的：售前和诊断已经能跑，边界我也讲清楚了。</p>
+      </section>
+    </main>
+
+    <aside class="notes" id="notes"></aside>
+    <footer class="foot">
+      <span id="meta">1 / 1</span>
+      <span>← → 翻页 · N 讲稿 · Home / End</span>
+      <span>
+        <button type="button" id="prev">上一页</button>
+        <button type="button" id="next">下一页</button>
+      </span>
+    </footer>
+    <script>
+      const slides = [...document.querySelectorAll(".slide")];
+      const notes = document.getElementById("notes");
+      const meta = document.getElementById("meta");
+      const bar = document.getElementById("bar");
+      let i = 0;
+      let showNotes = false;
+      function render() {
+        slides.forEach((s, idx) => s.classList.toggle("active", idx === i));
+        meta.textContent = `${i + 1} / ${slides.length}`;
+        bar.style.width = `${((i + 1) / slides.length) * 100}%`;
+        notes.innerHTML = `<b>讲稿</b>${slides[i].dataset.notes || ""}`;
+        notes.classList.toggle("show", showNotes);
+      }
+      function go(n) {
+        i = Math.max(0, Math.min(slides.length - 1, n));
+        render();
+      }
+      document.getElementById("prev").onclick = () => go(i - 1);
+      document.getElementById("next").onclick = () => go(i + 1);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
+          e.preventDefault();
+          go(i + 1);
+        } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+          e.preventDefault();
+          go(i - 1);
+        } else if (e.key === "Home") go(0);
+        else if (e.key === "End") go(slides.length - 1);
+        else if (e.key === "n" || e.key === "N") {
+          showNotes = !showNotes;
+          render();
+        }
+      });
+      render();
+    </script>
+  </body>
+</html>

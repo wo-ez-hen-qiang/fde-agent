@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { ChatRequest, ChatStreamEvent } from "@fde/shared";
-import { buildChatAgent, streamChat } from "@fde/agent-runtime";
-import { chatStore, mcpManager } from "@/lib/server";
+import { defaultAgentBackendId, resolveAgentBackend, runWithAgentLogs } from "@fde/agent-runtime";
+import { chatStore } from "@/lib/server";
 
 export const runtime = "nodejs";
 
@@ -18,6 +18,27 @@ export async function POST(req: Request) {
   }
 
   const store = chatStore();
+  const existingSession = body.sessionId ? await store.getSession(body.sessionId) : null;
+  if (body.sessionId && !existingSession) {
+    return Response.json({ error: "session not found" }, { status: 404 });
+  }
+  if (existingSession && body.backend && body.backend !== existingSession.backend) {
+    return Response.json({ error: "已有会话不能切换运行后端，请新建会话" }, { status: 409 });
+  }
+  const backendId = existingSession?.backend ?? body.backend ?? defaultAgentBackendId();
+  let backend;
+  try {
+    backend = resolveAgentBackend(backendId);
+  } catch (error) {
+    return Response.json(
+      { error: error instanceof Error ? error.message : String(error) },
+      { status: 400 },
+    );
+  }
+  const backendStatus = await backend.inspect();
+  if (!backendStatus.available) {
+    return Response.json({ error: backendStatus.detail }, { status: 503 });
+  }
   const sessionId =
     body.sessionId ??
     (
@@ -25,6 +46,7 @@ export async function POST(req: Request) {
         channel: body.channel ?? "web",
         knowledgeBaseId: body.knowledgeBaseId,
         model: body.model,
+        backend: backendId,
       })
     ).id;
 
@@ -33,7 +55,8 @@ export async function POST(req: Request) {
 
   const history = (await store.listMessages(sessionId))
     .filter((m) => m.role === "user" || m.role === "assistant")
-    .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
+    .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }))
+    .slice(0, -1);
 
   const messageId = randomUUID();
   const encoder = new TextEncoder();
@@ -44,24 +67,45 @@ export async function POST(req: Request) {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
       };
       let fullText = "";
+      let actualModel = body.model;
       try {
-        const agent = await buildChatAgent({
-          modelAlias: body.model,
-          knowledgeBaseId: body.knowledgeBaseId,
-          mcpManager: mcpManager(),
-        });
-        for await (const event of streamChat({ agent, input: body.message, history })) {
-          if (event.type === "delta") fullText += event.text;
-          if (event.type === "done") event.messageId = messageId;
-          send(event);
-        }
+        await runWithAgentLogs(
+          async () => {
+            for await (const event of backend.streamChat({
+              sessionId,
+              providerSessionId: existingSession?.providerSessionId,
+              input: body.message,
+              history,
+              model: body.model,
+              knowledgeBaseId: body.knowledgeBaseId,
+              signal: req.signal,
+            })) {
+              if (event.type === "backend_session") {
+                await store.setProviderSession(sessionId, event.sessionId);
+                actualModel = event.model ?? actualModel;
+                continue;
+              }
+              if (event.type === "delta") fullText += event.text;
+              if (event.type === "done") event.messageId = messageId;
+              send(event);
+            }
+          },
+          (logEvent) => {
+            send({
+              type: "log",
+              tag: logEvent.tag,
+              level: logEvent.level,
+              message: logEvent.message,
+            });
+          },
+        );
         if (fullText) {
           await store.appendMessage({
             id: messageId,
             sessionId,
             role: "assistant",
             content: fullText,
-            model: body.model,
+            model: actualModel,
             knowledgeBaseId: body.knowledgeBaseId,
           });
         }
